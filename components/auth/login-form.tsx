@@ -46,9 +46,9 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Clinic Login</CardTitle>
+    <Card className="w-full rounded-2xl shadow-lg shadow-black/5">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Clinic Login</CardTitle>
         <CardDescription>
           Sign in to view your feedback dashboard.
         </CardDescription>
@@ -60,10 +60,12 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
+              inputMode="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              className="h-12 rounded-xl"
             />
           </div>
           <div className="space-y-1.5">
@@ -75,10 +77,15 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              className="h-12 rounded-xl"
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={submitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="h-12 w-full rounded-xl text-base"
+          >
             {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>

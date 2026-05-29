@@ -9,6 +9,7 @@ import {
 } from "@/components/dashboard/trend-line-chart";
 import { isAdminEmail } from "@/lib/auth";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -32,6 +33,15 @@ export const metadata = { title: "Dashboard — Review Your Doctor" };
 
 function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+function Detail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <span>{label}</span>
+      <span className="text-right text-foreground">{value || "—"}</span>
+    </div>
+  );
 }
 
 function buildTrend(submissions: Submission[]): TrendPoint[] {
@@ -60,6 +70,18 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
+  const showAdminLink = isAdminEmail(user.email);
+  const adminButton = showAdminLink ? (
+    <Link
+      href="/admin"
+      className={buttonVariants({ variant: "outline", size: "sm" })}
+    >
+      <ShieldCheck className="size-4" />
+      <span className="hidden sm:inline">Admin dashboard</span>
+      <span className="sm:hidden">Admin</span>
+    </Link>
+  ) : null;
+
   // RLS restricts this to the clinic owned by the current user.
   const { data: clinic } = await supabase
     .from("clinics")
@@ -67,6 +89,9 @@ export default async function DashboardPage() {
     .maybeSingle<Clinic>();
 
   if (!clinic) {
+    // Founders have no clinic of their own — send them straight to admin.
+    if (showAdminLink) redirect("/admin");
+
     return (
       <div className="min-h-dvh bg-muted/30">
         <AppHeader title="Review Your Doctor" />
@@ -102,28 +127,20 @@ export default async function DashboardPage() {
   const trend = buildTrend(submissions);
 
   const liveRating = await getLiveRating(clinic.google_place_id);
-  const showAdminLink = isAdminEmail(user.email);
 
   return (
     <div className="min-h-dvh bg-muted/30">
       <AppHeader title={clinic.clinic_name} subtitle="Reputation dashboard">
-        {showAdminLink && (
-          <Link
-            href="/admin"
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            Admin
-          </Link>
-        )}
+        {adminButton}
       </AppHeader>
 
-      <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {/* Top metrics */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Live Google rating</CardDescription>
-              <CardTitle className="text-4xl">
+              <CardTitle className="text-3xl sm:text-4xl">
                 {liveRating.rating != null ? liveRating.rating.toFixed(1) : "—"}
                 <span className="text-2xl text-yellow-400"> ★</span>
               </CardTitle>
@@ -138,7 +155,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Scans this month</CardDescription>
-              <CardTitle className="text-4xl">{totalThisMonth}</CardTitle>
+              <CardTitle className="text-3xl sm:text-4xl">{totalThisMonth}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {totalAllTime} all-time
@@ -148,7 +165,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Negatives intercepted</CardDescription>
-              <CardTitle className="text-4xl">{negatives.length}</CardTitle>
+              <CardTitle className="text-3xl sm:text-4xl">{negatives.length}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               kept off Google
@@ -158,7 +175,7 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Positive rate</CardDescription>
-              <CardTitle className="text-4xl">
+              <CardTitle className="text-3xl sm:text-4xl">
                 {totalAllTime > 0
                   ? Math.round(
                       ((totalAllTime - negatives.length) / totalAllTime) * 100,
@@ -211,30 +228,59 @@ export default async function DashboardPage() {
                 No negative feedback yet. 🎉
               </p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile: stacked cards */}
+                <ul className="space-y-3 sm:hidden">
                   {negatives.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {new Date(s.created_at).toLocaleDateString("en-GB")}
-                      </TableCell>
-                      <TableCell>{s.star_rating}★</TableCell>
-                      <TableCell>{s.name || "—"}</TableCell>
-                      <TableCell>{s.email || "—"}</TableCell>
-                      <TableCell>{s.phone || "—"}</TableCell>
-                    </TableRow>
+                    <li
+                      key={s.id}
+                      className="rounded-xl border bg-background p-3 text-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-amber-600">
+                          {s.star_rating}★
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(s.created_at).toLocaleDateString("en-GB")}
+                        </span>
+                      </div>
+                      <div className="mt-2 space-y-1 text-muted-foreground">
+                        <Detail label="Name" value={s.name} />
+                        <Detail label="Email" value={s.email} />
+                        <Detail label="Phone" value={s.phone} />
+                      </div>
+                    </li>
                   ))}
-                </TableBody>
-              </Table>
+                </ul>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Rating</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {negatives.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell className="whitespace-nowrap">
+                            {new Date(s.created_at).toLocaleDateString("en-GB")}
+                          </TableCell>
+                          <TableCell>{s.star_rating}★</TableCell>
+                          <TableCell>{s.name || "—"}</TableCell>
+                          <TableCell>{s.email || "—"}</TableCell>
+                          <TableCell>{s.phone || "—"}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

@@ -10,17 +10,22 @@ interface AppHeaderProps {
 
 export function AppHeader({ title, subtitle, children }: AppHeaderProps) {
   return (
-    <header className="border-b bg-background">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <div>
-          <Link href="/dashboard" className="text-lg font-semibold">
+    <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="min-w-0">
+          <Link
+            href="/dashboard"
+            className="block truncate text-base font-semibold sm:text-lg"
+          >
             {title}
           </Link>
           {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">
+              {subtitle}
+            </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {children}
           <form action="/auth/signout" method="post">
             <Button type="submit" variant="outline" size="sm">

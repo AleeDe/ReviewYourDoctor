@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
 interface NegativeFormProps {
   slug: string;
@@ -29,7 +30,8 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
     setSubmitting(true);
 
     const supabase = createClient();
-    const { error } = await supabase.rpc("submit_feedback", {
+    // Even on error we thank the patient — never show them a wall.
+    await supabase.rpc("submit_feedback", {
       p_slug: slug,
       p_rating: rating,
       p_name: name,
@@ -38,19 +40,15 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
     });
 
     setSubmitting(false);
-    if (!error) {
-      setDone(true);
-    } else {
-      // Even on error we thank the patient — never show them a wall.
-      setDone(true);
-    }
+    setDone(true);
   }
 
   if (done) {
     return (
-      <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+      <div className="flex flex-col items-center gap-4 rounded-3xl border border-border/60 bg-card p-8 text-center shadow-lg shadow-black/5 sm:p-10">
+        <CheckCircle2 className="size-12 text-emerald-500" strokeWidth={1.75} />
         <h1 className="text-2xl font-semibold tracking-tight">Thank you</h1>
-        <p className="text-muted-foreground">
+        <p className="text-pretty text-muted-foreground">
           Our practice manager will reach out within 24 hours. We appreciate you
           giving us the chance to make it right.
         </p>
@@ -61,13 +59,13 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex w-full max-w-md flex-col gap-6 text-center"
+      className="flex flex-col gap-6 rounded-3xl border border-border/60 bg-card p-8 text-center shadow-lg shadow-black/5 sm:p-10"
     >
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-balance text-2xl font-semibold tracking-tight">
           We&apos;re really sorry to hear that
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-pretty text-muted-foreground">
           Can we make it right? Leave your details and our practice manager will
           reach out privately.
         </p>
@@ -81,6 +79,7 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
+            className="h-12 rounded-xl"
           />
         </div>
         <div className="space-y-1.5">
@@ -88,9 +87,11 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
           <Input
             id="email"
             type="email"
+            inputMode="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            className="h-12 rounded-xl"
           />
         </div>
         <div className="space-y-1.5">
@@ -98,15 +99,28 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
           <Input
             id="phone"
             type="tel"
+            inputMode="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             autoComplete="tel"
+            className="h-12 rounded-xl"
           />
         </div>
       </div>
 
-      <Button type="submit" size="lg" disabled={submitting} className="w-full">
-        {submitting ? "Sending…" : "Submit"}
+      <Button
+        type="submit"
+        disabled={submitting}
+        className="h-12 w-full rounded-xl text-base"
+      >
+        {submitting ? (
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            Sending…
+          </>
+        ) : (
+          "Submit"
+        )}
       </Button>
 
       <p className="text-xs text-muted-foreground">

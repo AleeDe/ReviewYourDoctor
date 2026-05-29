@@ -53,7 +53,7 @@ export default async function AdminPage() {
         </Link>
       </AppHeader>
 
-      <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Onboard a new clinic</CardTitle>

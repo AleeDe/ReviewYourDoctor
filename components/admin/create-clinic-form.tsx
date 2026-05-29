@@ -78,7 +78,13 @@ function Field({
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} type={type} placeholder={placeholder} />
+      <Input
+        id={name}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        className="h-10 rounded-lg"
+      />
     </div>
   );
 }

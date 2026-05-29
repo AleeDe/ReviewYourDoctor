@@ -28,7 +28,7 @@ export function TrendLineChart({ data }: { data: TrendPoint[] }) {
         <Line
           type="monotone"
           dataKey="count"
-          stroke="#2563eb"
+          stroke="#16a34a"
           strokeWidth={2}
           dot={{ r: 3 }}
           activeDot={{ r: 5 }}
