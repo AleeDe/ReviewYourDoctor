@@ -1,0 +1,6 @@
+# Minimal Supabase CLI config. Set project_id to your project ref before using
+# `supabase link` / `supabase functions deploy`.
+project_id = "review-your-doctor"
+
+[functions.send-negative-alert]
+verify_jwt = false
