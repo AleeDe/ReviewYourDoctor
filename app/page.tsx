@@ -201,7 +201,14 @@ export default function Home() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
           <span className="font-medium text-foreground">Review Your Doctor</span>
-          <span>Powered by ShiftDeploy</span>
+          <a
+            href="https://shiftdeploy.com"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="font-medium text-foreground transition-colors hover:text-emerald-600"
+          >
+            Powered by ShiftDeploy
+          </a>
         </div>
       </footer>
     </main>

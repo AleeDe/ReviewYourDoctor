@@ -96,9 +96,14 @@ export function AuthShell({
           </Item>
         </motion.div>
 
-        <p className="relative z-10 text-sm text-emerald-100/80">
+        <a
+          href="https://shiftdeploy.com"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="relative z-10 text-sm text-emerald-100/80 transition-colors hover:text-white"
+        >
           Powered by ShiftDeploy
-        </p>
+        </a>
       </aside>
 
       {/* ===== Form side ===== */}
@@ -117,9 +122,12 @@ export function AuthShell({
           {/* mobile brand + illustration (desktop shows it in the panel) */}
           <div className="mb-6 flex flex-col items-center text-center lg:hidden">
             <span className="flex items-center gap-2 font-semibold">
-              <span className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white">
-                <Star className="size-4 fill-white" strokeWidth={0} />
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-mark.png"
+                alt="Review Your Doctor"
+                className="size-8 rounded-lg"
+              />
               Review Your Doctor
             </span>
             <motion.div
