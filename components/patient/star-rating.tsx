@@ -10,33 +10,42 @@ interface StarRatingProps {
   slug: string;
   clinicName: string;
   googleReviewUrl: string | null;
+  /** Ratings at or above this go to Google; below are captured privately. */
+  positiveThreshold: number;
 }
 
 /**
  * The single-decision patient screen: tap a star.
- * 4–5 stars  -> log positive + redirect to Google review page.
- * 1–3 stars  -> route to the private "sorry" contact screen.
+ * 4-5 stars  -> log positive + redirect to Google review page.
+ * 1-3 stars  -> route to the private "sorry" contact screen.
  *
  * Designed for minimum effort (Fitts's + Hick's law): large touch targets,
  * one decision, instant visual confirmation before acting.
  */
-export function StarRating({ slug, clinicName, googleReviewUrl }: StarRatingProps) {
+export function StarRating({
+  slug,
+  clinicName,
+  googleReviewUrl,
+  positiveThreshold,
+}: StarRatingProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   async function handleSelect(rating: number) {
     if (submitting) return;
     setSelected(rating);
     setSubmitting(true);
 
-    // Brief pause so the patient sees their stars fill (Visibility of status).
-    if (rating >= 4) {
+    // At or above the clinic's threshold → send to Google to leave a review.
+    if (rating >= positiveThreshold) {
       const supabase = createClient();
       await supabase.rpc("submit_feedback", { p_slug: slug, p_rating: rating });
-      await new Promise((r) => setTimeout(r, 250));
       if (googleReviewUrl) {
+        setRedirecting(true);
+        await new Promise((r) => setTimeout(r, 900));
         window.location.assign(googleReviewUrl);
       } else {
         router.push(`/${slug}/ty`);
@@ -98,8 +107,13 @@ export function StarRating({ slug, clinicName, googleReviewUrl }: StarRatingProp
         })}
       </div>
 
-      <p className="flex h-5 items-center justify-center gap-2 text-sm text-muted-foreground">
-        {submitting ? (
+      <p className="flex min-h-5 items-center justify-center gap-2 px-2 text-center text-sm text-muted-foreground">
+        {redirecting ? (
+          <>
+            <Loader2 className="size-4 animate-spin text-emerald-600" />
+            Taking you to Google. Please leave us a review there!
+          </>
+        ) : submitting ? (
           <>
             <Loader2 className="size-4 animate-spin" />
             One moment…

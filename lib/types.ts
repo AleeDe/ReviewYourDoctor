@@ -11,8 +11,11 @@ export interface Clinic {
   manager_email: string;
   google_place_id: string | null;
   owner_user_id: string | null;
+  logo_url: string | null;
+  positive_threshold: number;
   created_at: string;
   trial_ends_at: string | null;
+  approved_at: string | null;
   is_active: boolean;
 }
 
@@ -21,6 +24,8 @@ export interface ClinicPublic {
   slug: string;
   clinic_name: string;
   google_review_url: string | null;
+  logo_url: string | null;
+  positive_threshold: number;
 }
 
 export interface Submission {
@@ -31,5 +36,6 @@ export interface Submission {
   name: string | null;
   email: string | null;
   phone: string | null;
+  reason: string | null;
   created_at: string;
 }

@@ -94,6 +94,26 @@ export async function createClinic(
   }
 }
 
+export async function adminConnectGoogle(
+  clinicId: string,
+  placeId: string | null,
+  reviewUrl: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const user = await getCurrentUser();
+  if (!isAdminEmail(user?.email)) return { ok: false, message: "Not authorised" };
+  if (!clinicId || !reviewUrl) return { ok: false, message: "Missing data" };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("clinics")
+    .update({ google_place_id: placeId, google_review_url: reviewUrl })
+    .eq("id", clinicId);
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function toggleClinicActive(formData: FormData): Promise<void> {
   await assertAdmin();
   const id = String(formData.get("id") ?? "");
@@ -101,6 +121,12 @@ export async function toggleClinicActive(formData: FormData): Promise<void> {
   if (!id) return;
 
   const admin = createAdminClient();
-  await admin.from("clinics").update({ is_active: next }).eq("id", id);
+  await admin
+    .from("clinics")
+    .update({
+      is_active: next,
+      ...(next ? { approved_at: new Date().toISOString() } : {}),
+    })
+    .eq("id", id);
   revalidatePath("/admin");
 }

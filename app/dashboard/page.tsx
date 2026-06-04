@@ -1,15 +1,32 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import {
+  ShieldCheck,
+  Star,
+  ScanLine,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  Circle,
+  Lock,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getLiveRating } from "@/lib/google/places";
+import { isAdminEmail } from "@/lib/auth";
 import { AppHeader } from "@/components/app-header";
 import { RatingBarChart } from "@/components/dashboard/rating-bar-chart";
 import {
   TrendLineChart,
   type TrendPoint,
 } from "@/components/dashboard/trend-line-chart";
-import { isAdminEmail } from "@/lib/auth";
-import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { LogoUpload } from "@/components/dashboard/logo-upload";
+import { GoogleConnect } from "@/components/dashboard/google-connect";
+import { ReviewThreshold } from "@/components/dashboard/review-threshold";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { NegativeFeedback } from "@/components/dashboard/negative-feedback";
+import { CreateClinicOnboarding } from "@/components/dashboard/create-clinic-onboarding";
+import { BrandedQrCard } from "@/components/qr/branded-qr-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -18,29 +35,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 import type { Clinic, Submission } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Dashboard — Review Your Doctor" };
+export const metadata = { title: "Dashboard | Review Your Doctor" };
 
 function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
 
-function Detail({ label, value }: { label: string; value: string | null }) {
+function siteUrl() {
   return (
-    <div className="flex justify-between gap-2">
-      <span>{label}</span>
-      <span className="text-right text-foreground">{value || "—"}</span>
-    </div>
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+    "http://localhost:3000"
+  );
+}
+
+function initialsOf(name: string) {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "C"
   );
 }
 
@@ -88,24 +108,117 @@ export default async function DashboardPage() {
     .select("*")
     .maybeSingle<Clinic>();
 
+  // No clinic: founders go to admin; businesses finish onboarding here.
   if (!clinic) {
-    // Founders have no clinic of their own — send them straight to admin.
     if (showAdminLink) redirect("/admin");
-
     return (
       <div className="min-h-dvh bg-muted/30">
         <AppHeader title="Review Your Doctor" />
-        <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-          <h1 className="text-xl font-semibold">No clinic linked yet</h1>
-          <p className="mt-2 text-muted-foreground">
-            Your account isn&apos;t linked to a clinic. Please contact the Review
-            Your Doctor team to finish setup.
-          </p>
+        <div className="mx-auto max-w-lg px-4 py-10 sm:py-16">
+          <CreateClinicOnboarding />
         </div>
       </div>
     );
   }
 
+  // Clinic exists but not approved yet → pending + onboarding checklist.
+  if (!clinic.is_active) {
+    const hasGoogle = Boolean(clinic.google_review_url);
+    const hasLogo = Boolean(clinic.logo_url);
+    return (
+      <div className="min-h-dvh bg-muted/30">
+        <AppHeader
+          title={clinic.clinic_name}
+          subtitle="Account setup"
+          logoUrl={clinic.logo_url}
+          initials={initialsOf(clinic.clinic_name)}
+        >
+          {adminButton}
+        </AppHeader>
+        <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-green-700 px-6 py-8 text-white shadow-lg shadow-emerald-600/20">
+            <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center gap-2 text-emerald-50">
+              <Clock className="size-5" />
+              <span className="text-sm font-medium">Under review</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+              You&apos;re almost live!
+            </h1>
+            <p className="mt-2 max-w-xl text-emerald-50">
+              Our team is reviewing your clinic. Finish the steps below so your
+              branded QR poster is ready the moment you&apos;re approved.
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-base">Setup checklist</CardTitle>
+                <CardDescription>Get ready to go live.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <ChecklistRow done label="Account created" />
+                <div>
+                  <ChecklistRow done={hasLogo} label="Upload your clinic logo" />
+                  <div className="mt-3 pl-7">
+                    <LogoUpload
+                      clinicId={clinic.id}
+                      currentLogoUrl={clinic.logo_url}
+                    />
+                  </div>
+                </div>
+                <ChecklistRow
+                  done={hasGoogle}
+                  label="Google listing connected"
+                  hint={
+                    hasGoogle ? undefined : "Connect it in the poster panel →"
+                  }
+                />
+                <ChecklistRow done={false} label="Approved by our team" pending />
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-base">Your review poster</CardTitle>
+                <CardDescription>
+                  Connect Google to generate the poster patients scan.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <GoogleConnect
+                  connected={hasGoogle}
+                  currentReviewUrl={clinic.google_review_url}
+                />
+                {hasGoogle ? (
+                  <div className="flex justify-center">
+                    <BrandedQrCard
+                      slug={clinic.slug}
+                      clinicName={clinic.clinic_name}
+                      logoUrl={clinic.logo_url}
+                      siteUrl={siteUrl()}
+                      preview
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-8 text-center">
+                    <Lock className="size-6 text-muted-foreground" />
+                    <p className="text-sm font-medium">QR poster locked</p>
+                    <p className="px-6 text-sm text-muted-foreground">
+                      Connect your Google listing above to generate it.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Active clinic: full dashboard ----
   const { data: submissionsData } = await supabase
     .from("submissions")
     .select("*")
@@ -113,7 +226,6 @@ export default async function DashboardPage() {
 
   const submissions = (submissionsData ?? []) as Submission[];
 
-  // ---- aggregate ----
   const monthStart = startOfMonth(new Date());
   const totalAllTime = submissions.length;
   const totalThisMonth = submissions.filter(
@@ -124,75 +236,67 @@ export default async function DashboardPage() {
   for (const s of submissions) distribution[s.star_rating]++;
 
   const negatives = submissions.filter((s) => !s.is_positive);
+  const positiveRate =
+    totalAllTime > 0
+      ? Math.round(((totalAllTime - negatives.length) / totalAllTime) * 100)
+      : 0;
   const trend = buildTrend(submissions);
-
   const liveRating = await getLiveRating(clinic.google_place_id);
 
   return (
     <div className="min-h-dvh bg-muted/30">
-      <AppHeader title={clinic.clinic_name} subtitle="Reputation dashboard">
+      <AppHeader
+        title={clinic.clinic_name}
+        subtitle="Reputation dashboard"
+        logoUrl={clinic.logo_url}
+        initials={initialsOf(clinic.clinic_name)}
+      >
         {adminButton}
       </AppHeader>
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        {/* Top metrics */}
+        {/* Quick actions: one tap to share/open the form (KLM + Fitts) */}
+        <QuickActions slug={clinic.slug} siteUrl={siteUrl()} />
+
+        {/* Bento stat tiles */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Live Google rating</CardDescription>
-              <CardTitle className="text-3xl sm:text-4xl">
-                {liveRating.rating != null ? liveRating.rating.toFixed(1) : "—"}
-                <span className="text-2xl text-yellow-400"> ★</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {liveRating.reviewCount != null
+          <StatCard
+            feature
+            label="Live Google rating"
+            value={liveRating.rating ?? 0}
+            decimals={1}
+            suffix=" ★"
+            hint={
+              liveRating.reviewCount != null
                 ? `${liveRating.reviewCount} Google reviews`
-                : "Connect a Google Place ID"}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Scans this month</CardDescription>
-              <CardTitle className="text-3xl sm:text-4xl">{totalThisMonth}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {totalAllTime} all-time
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Negatives intercepted</CardDescription>
-              <CardTitle className="text-3xl sm:text-4xl">{negatives.length}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              kept off Google
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Positive rate</CardDescription>
-              <CardTitle className="text-3xl sm:text-4xl">
-                {totalAllTime > 0
-                  ? Math.round(
-                      ((totalAllTime - negatives.length) / totalAllTime) * 100,
-                    )
-                  : 0}
-                %
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              4–5★ sent to Google
-            </CardContent>
-          </Card>
+                : "Connect a Google Place ID"
+            }
+            icon={<Star className="size-5" />}
+          />
+          <StatCard
+            label="Scans this month"
+            value={totalThisMonth}
+            hint={`${totalAllTime} all-time`}
+            icon={<ScanLine className="size-5" />}
+          />
+          <StatCard
+            label="Negatives intercepted"
+            value={negatives.length}
+            hint="kept off Google"
+            icon={<ShieldCheck className="size-5" />}
+          />
+          <StatCard
+            label="Positive rate"
+            value={positiveRate}
+            suffix="%"
+            hint="4-5★ sent to Google"
+            icon={<TrendingUp className="size-5" />}
+          />
         </div>
 
         {/* Charts */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-base">Rating distribution</CardTitle>
             </CardHeader>
@@ -200,7 +304,7 @@ export default async function DashboardPage() {
               <RatingBarChart distribution={distribution} />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-base">
                 Submissions (last 6 months)
@@ -212,78 +316,82 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Negative submissions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Negative feedback to follow up
-            </CardTitle>
-            <CardDescription>
-              Patients who rated 1–3★. Reach out privately and resolve.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {negatives.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                No negative feedback yet. 🎉
-              </p>
-            ) : (
-              <>
-                {/* Mobile: stacked cards */}
-                <ul className="space-y-3 sm:hidden">
-                  {negatives.map((s) => (
-                    <li
-                      key={s.id}
-                      className="rounded-xl border bg-background p-3 text-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-amber-600">
-                          {s.star_rating}★
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(s.created_at).toLocaleDateString("en-GB")}
-                        </span>
-                      </div>
-                      <div className="mt-2 space-y-1 text-muted-foreground">
-                        <Detail label="Name" value={s.name} />
-                        <Detail label="Email" value={s.email} />
-                        <Detail label="Phone" value={s.phone} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+        {/* Action centre (left) + branding & poster grouped (right) */}
+        <div className="grid items-start gap-4 lg:grid-cols-3">
+          {/* Negative feedback = the action centre (Fitts/Hick: primary task, F-pattern left) */}
+          <div className="lg:col-span-2">
+            <NegativeFeedback negatives={negatives} />
+          </div>
 
-                {/* Desktop: table */}
-                <div className="hidden overflow-x-auto sm:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {negatives.map((s) => (
-                        <TableRow key={s.id}>
-                          <TableCell className="whitespace-nowrap">
-                            {new Date(s.created_at).toLocaleDateString("en-GB")}
-                          </TableCell>
-                          <TableCell>{s.star_rating}★</TableCell>
-                          <TableCell>{s.name || "—"}</TableCell>
-                          <TableCell>{s.email || "—"}</TableCell>
-                          <TableCell>{s.phone || "—"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+          {/* Branding + poster grouped together (Gestalt proximity, no empty card) */}
+          <Card id="poster" className="scroll-mt-24 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="text-base">Review poster & branding</CardTitle>
+              <CardDescription>
+                Connect Google + add your logo to unlock your QR poster.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <GoogleConnect
+                connected={Boolean(clinic.google_review_url)}
+                currentReviewUrl={clinic.google_review_url}
+              />
+              <Separator />
+              <ReviewThreshold current={clinic.positive_threshold} />
+              <Separator />
+              <LogoUpload clinicId={clinic.id} currentLogoUrl={clinic.logo_url} />
+              <Separator />
+              {clinic.google_review_url ? (
+                <div className="flex justify-center">
+                  <BrandedQrCard
+                    slug={clinic.slug}
+                    clinicName={clinic.clinic_name}
+                    logoUrl={clinic.logo_url}
+                    siteUrl={siteUrl()}
+                  />
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-8 text-center">
+                  <Lock className="size-6 text-muted-foreground" />
+                  <p className="text-sm font-medium">QR poster locked</p>
+                  <p className="px-6 text-sm text-muted-foreground">
+                    Connect your Google listing above to generate your QR poster.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistRow({
+  label,
+  done,
+  pending = false,
+  hint,
+}: {
+  label: string;
+  done: boolean;
+  pending?: boolean;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      {done ? (
+        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-500" />
+      ) : pending ? (
+        <Clock className="mt-0.5 size-5 shrink-0 text-amber-500" />
+      ) : (
+        <Circle className="mt-0.5 size-5 shrink-0 text-muted-foreground/40" />
+      )}
+      <div>
+        <p className={done ? "font-medium" : "font-medium text-foreground"}>
+          {label}
+        </p>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
     </div>
   );

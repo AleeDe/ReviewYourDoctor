@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const clinic = await getClinic(slug);
   return {
-    title: clinic ? `${clinic.clinic_name} — Leave Feedback` : "Feedback",
+    title: clinic ? `${clinic.clinic_name} | Leave Feedback` : "Feedback",
   };
 }
 
@@ -38,6 +38,7 @@ export default async function ClinicFormPage({ params }: PageProps) {
       slug={clinic.slug}
       clinicName={clinic.clinic_name}
       googleReviewUrl={clinic.google_review_url}
+      positiveThreshold={clinic.positive_threshold}
     />
   );
 }

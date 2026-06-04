@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Review Your Doctor",
   description:
-    "Reputation management for private dental clinics — collect, filter, and grow your Google reviews.",
+    "Reputation management for private dental clinics: collect, filter, and grow your Google reviews.",
 };
 
 export const viewport: Viewport = {
@@ -34,6 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

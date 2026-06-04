@@ -2,7 +2,7 @@ import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * Supabase client for use in Client Components (browser).
- * Uses the public anon key — safe to expose.
+ * Uses the public anon key, safe to expose.
  */
 export function createClient() {
   return createBrowserClient(

@@ -3,14 +3,18 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
+import { usePublicBase } from "@/lib/use-public-base";
 
 interface QrCodeProps {
-  url: string;
   slug: string;
+  /** Configured public base (NEXT_PUBLIC_SITE_URL). */
+  siteUrl: string;
 }
 
 /** Renders a downloadable QR code for a clinic's feedback URL. */
-export function QrCode({ url, slug }: QrCodeProps) {
+export function QrCode({ slug, siteUrl }: QrCodeProps) {
+  const base = usePublicBase(siteUrl);
+  const url = `${base}/${slug}`;
   const [dataUrl, setDataUrl] = useState<string>("");
 
   useEffect(() => {

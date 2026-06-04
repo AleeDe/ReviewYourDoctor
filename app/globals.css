@@ -133,6 +133,20 @@
     text-size-adjust: 100%;
     scroll-behavior: smooth;
   }
+  /* Pointer cursor on interactive elements (Tailwind v4 reset drops it) */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  select:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   /* Prevent iOS auto-zoom on focus: form controls stay >= 16px on small screens */
   @media (max-width: 640px) {
     input,
@@ -154,6 +168,14 @@
   }
   .safe-pt {
     padding-top: max(1.5rem, env(safe-area-inset-top));
+  }
+  /* Subtle dot texture for the auth brand panel */
+  .dot-grid {
+    background-image: radial-gradient(
+      rgba(255, 255, 255, 0.7) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
   }
   /* Soft brand backdrop for patient-facing screens */
   .patient-surface {

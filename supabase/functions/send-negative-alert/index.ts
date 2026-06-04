@@ -23,6 +23,7 @@ interface SubmissionRecord {
   name: string | null;
   email: string | null;
   phone: string | null;
+  reason: string | null;
   created_at: string;
 }
 
@@ -89,12 +90,17 @@ Deno.serve(async (req) => {
             .join("")}</ul>`
         : `<p>The patient did not leave contact details.</p>`;
 
+    const reasonHtml = record.reason
+      ? `<p><strong>What went wrong:</strong></p><blockquote style="border-left:3px solid #16a34a;margin:0;padding:4px 12px;color:#333">${record.reason}</blockquote>`
+      : "";
+
     const html = `
       <div style="font-family:system-ui,sans-serif;line-height:1.5">
         <h2>New negative feedback at ${clinic.clinic_name}</h2>
         <p>A patient rated their visit <strong>${record.star_rating} star${
           record.star_rating > 1 ? "s" : ""
         }</strong>.</p>
+        ${reasonHtml}
         ${contactHtml}
         <p>Please reach out privately within 24 hours to resolve the issue.</p>
         <p style="color:#666;font-size:12px">Received: ${record.created_at}</p>
@@ -103,6 +109,7 @@ Deno.serve(async (req) => {
     const text =
       `New negative feedback at ${clinic.clinic_name}\n` +
       `Rating: ${record.star_rating} star(s)\n` +
+      (record.reason ? `Reason: ${record.reason}\n` : "") +
       (contactLines.length ? contactLines.join("\n") : "No contact details") +
       `\nPlease reach out within 24 hours.`;
 
