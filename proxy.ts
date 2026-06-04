@@ -6,13 +6,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static, _next/image (Next internals)
-     * - favicon.ico and common static assets
-     * Run on everything else so the auth session is kept fresh.
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-  ],
+  /*
+   * Only run the auth session refresh on routes that actually need a server
+   * session. Public pages (landing, the patient QR form, login/signup) skip the
+   * Supabase round-trip entirely, so they load instantly.
+   */
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

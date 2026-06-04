@@ -152,6 +152,8 @@ export async function getLiveRating(
         },
         // Cache for 1 hour to stay well within free-tier quota.
         next: { revalidate: 3600 },
+        // Never let a slow Google call hang the dashboard render.
+        signal: AbortSignal.timeout(4000),
       },
     );
 

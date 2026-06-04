@@ -219,12 +219,13 @@ export default async function DashboardPage() {
   }
 
   // ---- Active clinic: full dashboard ----
-  const { data: submissionsData } = await supabase
-    .from("submissions")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Fetch submissions and the live Google rating in parallel.
+  const [submissionsRes, liveRating] = await Promise.all([
+    supabase.from("submissions").select("*").order("created_at", { ascending: false }),
+    getLiveRating(clinic.google_place_id),
+  ]);
 
-  const submissions = (submissionsData ?? []) as Submission[];
+  const submissions = (submissionsRes.data ?? []) as Submission[];
 
   const monthStart = startOfMonth(new Date());
   const totalAllTime = submissions.length;
@@ -241,7 +242,6 @@ export default async function DashboardPage() {
       ? Math.round(((totalAllTime - negatives.length) / totalAllTime) * 100)
       : 0;
   const trend = buildTrend(submissions);
-  const liveRating = await getLiveRating(clinic.google_place_id);
 
   return (
     <div className="min-h-dvh bg-muted/30">
