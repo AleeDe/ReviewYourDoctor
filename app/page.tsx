@@ -46,9 +46,10 @@ export default function Home() {
             </StaggerItem>
             <StaggerItem>
               <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg lg:mx-0">
-                A frictionless QR feedback form that sends happy patients to
-                Google and quietly intercepts unhappy ones before they post, so
-                your reputation keeps climbing.
+                A frictionless QR feedback form that invites every patient to
+                share their experience, and instantly alerts your manager when
+                someone needs attention, so you can resolve issues before they
+                escalate.
               </p>
             </StaggerItem>
             <StaggerItem>
@@ -106,8 +107,8 @@ export default function Home() {
             How it works
           </h2>
           <p className="mt-3 text-pretty text-muted-foreground">
-            One scan. One tap. Happy patients go public, unhappy ones come to
-            you first.
+            One scan, one tap. Every patient can share their experience, and
+            your manager is alerted the moment someone needs attention.
           </p>
         </Reveal>
 
@@ -127,18 +128,18 @@ export default function Home() {
           <BentoTile
             icon={<TrendingUp className="size-6 text-emerald-600" />}
             title="4-5★ → Google"
-            body="Happy patients are sent straight to your Google review page."
+            body="Patients who rate 4-5★ are directed to Google to share their experience publicly."
           />
           <BentoTile
             className="sm:col-span-2"
             icon={<Bell className="size-6 text-emerald-600" />}
             title="1-3★ → private alert"
-            body="Unhappy patients reach you privately. You get an instant email to make it right, before a bad review ever goes public."
+            body="Patients who rate 1-3★ trigger a private manager alert so you can reach out and make it right. They can still post publicly if they choose."
           />
           <BentoTile
             icon={<ShieldCheck className="size-6 text-emerald-600" />}
             title="Reputation protected"
-            body="Your public rating only goes up. Issues are resolved off-platform."
+            body="Issues are resolved quickly and professionally. Happy patients who share publicly help your rating reflect the quality you deliver."
           />
         </Stagger>
       </section>
@@ -160,8 +161,91 @@ export default function Home() {
             <Feature
               icon={<ShieldCheck className="size-6" />}
               title="Private by design"
-              body="Negative feedback is captured privately and routed to your manager, never published."
+              body="Lower ratings trigger a private alert to your manager so you can follow up. Patients always remain free to post publicly."
             />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Pricing ===== */}
+      <section id="pricing" className="mx-auto max-w-5xl px-5 py-20 sm:py-24">
+        <Reveal className="mx-auto max-w-md">
+          <div className="rounded-3xl border bg-card p-8 text-center shadow-sm">
+            <h2 className="text-3xl font-bold tracking-tight">Simple pricing</h2>
+            <p className="mt-2 text-muted-foreground">
+              One flat price. Cancel anytime.
+            </p>
+            <div className="mt-6 flex items-end justify-center gap-1">
+              <span className="text-5xl font-bold tracking-tight">£49</span>
+              <span className="mb-1.5 text-muted-foreground">/month</span>
+            </div>
+            <ul className="mx-auto mt-6 max-w-xs space-y-2 text-left text-sm">
+              {[
+                "30-day free trial, no card required",
+                "No setup fee, no annual contract",
+                "Branded QR poster + dashboard included",
+                "UK GDPR compliant, DPA with every account",
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2">
+                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/signup"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "mt-7 h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700",
+              )}
+            >
+              Start your free trial
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="border-t bg-muted/40">
+        <div className="mx-auto max-w-3xl px-5 py-20 sm:py-24">
+          <Reveal className="text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Frequently asked questions
+            </h2>
+          </Reveal>
+          <div className="mt-10 space-y-3">
+            <Faq q="Is this GDPR compliant?">
+              Yes. Review Your Doctor operates as a data processor under UK GDPR
+              and the Data Protection Act 2018. A Data Processing Agreement (DPA)
+              is included with every account. Patient data is encrypted, stored
+              securely on UK/EU servers, and automatically deleted after 12
+              months.
+            </Faq>
+            <Faq q="Does it filter reviews before they reach Google?">
+              No. All patients are free to post publicly on Google regardless of
+              their rating. The system invites every patient to share their
+              experience. For patients who rate 1-3 stars, the practice manager
+              receives a private alert so they can follow up, but no review is
+              ever blocked or withheld.
+            </Faq>
+            <Faq q="Does my team need to learn new software?">
+              No. A branded QR poster sits at reception. Nothing changes in your
+              team&apos;s daily workflow. The only action required is printing one
+              A4 poster.
+            </Faq>
+            <Faq q="How long does setup take?">
+              Under 30 minutes from sign-up to live. We set up your account,
+              generate your QR poster, and send you everything you need by email.
+            </Faq>
+            <Faq q="What data is collected from patients?">
+              For patients who rate 4-5 stars: only an anonymous star rating. For
+              patients who rate 1-3 stars and choose to leave contact details:
+              name, email, and phone (all optional). No medical data is ever
+              collected.
+            </Faq>
+            <Faq q="What is the cost after the free trial?">
+              £49/month. No setup fee. No annual contract. Cancel anytime.
+            </Faq>
           </div>
         </div>
       </section>
@@ -198,17 +282,41 @@ export default function Home() {
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
-          <span className="font-medium text-foreground">Review Your Doctor</span>
-          <a
-            href="https://shiftdeploy.com"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="font-medium text-foreground transition-colors hover:text-emerald-600"
-          >
-            Powered by ShiftDeploy
-          </a>
+      <footer className="border-t bg-muted/30">
+        <div className="mx-auto max-w-6xl space-y-5 px-5 py-10 text-sm text-muted-foreground">
+          <p className="max-w-3xl">
+            Review Your Doctor is built for UK GDPR compliance. A Data Processing
+            Agreement (DPA) is included with every account. Patient data is
+            encrypted, stored securely, and never used for any purpose other than
+            the clinic&apos;s own feedback management.
+          </p>
+          <div className="flex flex-col items-start justify-between gap-4 border-t pt-5 sm:flex-row sm:items-center">
+            <span className="font-medium text-foreground">
+              Review Your Doctor
+            </span>
+            <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Link href="/privacy" className="hover:text-foreground">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="hover:text-foreground">
+                Terms
+              </Link>
+              <a
+                href="mailto:shiftdeploy@gmail.com"
+                className="hover:text-foreground"
+              >
+                Contact
+              </a>
+              <a
+                href="https://shiftdeploy.com"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="font-medium text-foreground transition-colors hover:text-emerald-600"
+              >
+                Powered by ShiftDeploy
+              </a>
+            </nav>
+          </div>
         </div>
       </footer>
     </main>
@@ -295,5 +403,19 @@ function Feature({
         </span>
       </div>
     </Reveal>
+  );
+}
+
+function Faq({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-2xl border bg-card p-5 [&[open]]:shadow-sm">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+        {q}
+        <span className="text-emerald-600 transition-transform group-open:rotate-45">
+          +
+        </span>
+      </summary>
+      <p className="mt-3 text-sm text-muted-foreground">{children}</p>
+    </details>
   );
 }

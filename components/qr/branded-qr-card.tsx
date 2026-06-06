@@ -150,7 +150,12 @@ export function BrandedQrCard({
             Your review means the world to us
           </p>
 
-          <div className="mt-4 flex items-center justify-center gap-1.5 border-t border-neutral-100 py-3">
+          <p className="mt-3 px-5 text-center text-[7px] leading-tight text-neutral-400">
+            By submitting feedback you agree it may be shared with {clinicName}{" "}
+            for service improvement. Privacy: {base}/privacy
+          </p>
+
+          <div className="mt-3 flex items-center justify-center gap-1.5 border-t border-neutral-100 py-3">
             <span className="text-[11px] text-neutral-400">Powered by</span>
             {sdLogoError ? (
               <span className="text-sm font-bold text-emerald-600">ShiftDeploy</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,8 +138,17 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
       </Button>
 
       <p className="text-xs text-muted-foreground">
-        By submitting this form you consent to your feedback being shared with
-        the clinic so they can follow up with you.
+        By submitting, you consent to the clinic contacting you about your
+        experience. Your details are used only for this purpose and kept for no
+        longer than 12 months. See our{" "}
+        <Link
+          href="/privacy"
+          target="_blank"
+          className="underline hover:text-foreground"
+        >
+          Privacy Policy
+        </Link>
+        .
       </p>
     </form>
   );

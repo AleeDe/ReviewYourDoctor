@@ -64,7 +64,7 @@ export function parseMapsLink(raw: string): ParsedReview | null {
     };
   }
 
-  // Any Google Maps / short link — place page only.
+  // Any Google Maps / short link (place page only).
   if (
     /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|g\.page|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)/i.test(
       v,
@@ -149,7 +149,7 @@ export function GooglePlacePicker({ onConnect }: GooglePlacePickerProps) {
         </summary>
         <ul className="mt-2 list-disc space-y-1 pl-4">
           <li>
-            <strong>Recommended — paste your Place ID:</strong> get it free from
+            <strong>Recommended: paste your Place ID.</strong> Get it free from
             the{" "}
             <a
               href="https://developers.google.com/maps/documentation/places/web-service/place-id"

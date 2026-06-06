@@ -34,6 +34,7 @@ export function SignupForm() {
   const [password, setPassword] = useState("");
   const [reviewUrl, setReviewUrl] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -50,6 +51,10 @@ export function SignupForm() {
     }
     if (!clinicName.trim() || !effectiveSlug) {
       setError("Please enter your clinic name.");
+      return;
+    }
+    if (!agreed) {
+      setError("Please accept the Terms and Privacy Policy to continue.");
       return;
     }
 
@@ -225,11 +230,39 @@ export function SignupForm() {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 text-left text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 size-4 shrink-0 accent-emerald-600"
+            />
+            <span>
+              I agree to the{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="font-medium text-emerald-600 hover:underline"
+              >
+                Terms &amp; Conditions
+              </Link>{" "}
+              and have read the{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="font-medium text-emerald-600 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !agreed}
             className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
           >
             {submitting ? (
