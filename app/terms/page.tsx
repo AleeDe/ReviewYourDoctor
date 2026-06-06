@@ -60,10 +60,10 @@ export default function TermsPage() {
       <p className="text-sm text-muted-foreground">
         Questions:{" "}
         <a
-          href="mailto:shiftdeploy@gmail.com"
+          href="mailto:contact@shiftdeploy.com"
           className="text-emerald-600 hover:underline"
         >
-          shiftdeploy@gmail.com
+          contact@shiftdeploy.com
         </a>
       </p>
     </LegalLayout>

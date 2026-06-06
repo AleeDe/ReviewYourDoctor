@@ -23,7 +23,7 @@ and follow up privately with patients who report a poor experience.
 
 ## 3. Type of personal data
 - Star rating (always; anonymous for positive ratings)
-- On 1–3★ submissions only, where the patient chooses to provide them: name,
+- On 1-3★ submissions only, where the patient chooses to provide them: name,
   email address, phone number, and a free-text reason.
 - No special-category (medical) data is processed.
 

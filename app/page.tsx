@@ -302,7 +302,7 @@ export default function Home() {
                 Terms
               </Link>
               <a
-                href="mailto:shiftdeploy@gmail.com"
+                href="mailto:contact@shiftdeploy.com"
                 className="hover:text-foreground"
               >
                 Contact

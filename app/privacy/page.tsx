@@ -69,10 +69,10 @@ export default function PrivacyPage() {
         <br />
         Data queries:{" "}
         <a
-          href="mailto:shiftdeploy@gmail.com"
+          href="mailto:contact@shiftdeploy.com"
           className="text-emerald-600 hover:underline"
         >
-          shiftdeploy@gmail.com
+          contact@shiftdeploy.com
         </a>
         <br />
         ICO registration number: <em>pending registration</em>.
