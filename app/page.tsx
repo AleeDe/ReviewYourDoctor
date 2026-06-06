@@ -82,6 +82,14 @@ export default function Home() {
                 30-day free trial · No card required · Live in minutes
               </p>
             </StaggerItem>
+            <StaggerItem>
+              <div className="mt-4 flex justify-center lg:justify-start">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <ShieldCheck className="size-3.5" />
+                  UK GDPR Compliant
+                </span>
+              </div>
+            </StaggerItem>
           </Stagger>
 
           <div className="relative">
@@ -284,6 +292,10 @@ export default function Home() {
       {/* ===== Footer ===== */}
       <footer className="border-t bg-muted/30">
         <div className="mx-auto max-w-6xl space-y-5 px-5 py-10 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+            <ShieldCheck className="size-3.5" />
+            UK GDPR Compliant
+          </span>
           <p className="max-w-3xl">
             Review Your Doctor is built for UK GDPR compliance. A Data Processing
             Agreement (DPA) is included with every account. Patient data is
