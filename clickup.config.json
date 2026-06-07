@@ -1,0 +1,8 @@
+{
+  "workspaceId": "90182539953",
+  "docId": "2kzmrpnh-1418",
+  "listId": "901818612808",
+  "changelogTaskId": "86exvq7wv",
+  "docsParentTaskId": "86exvqdbm",
+  "note": "ClickUp targets for Review Your Doctor. API key is NOT here - set CLICKUP_API_KEY in env. Docs live in docs/project/*.md (gitignored)."
+}

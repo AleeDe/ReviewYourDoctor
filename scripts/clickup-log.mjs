@@ -14,9 +14,13 @@
  * The API key is read from the environment and is never hard-coded or committed.
  */
 import { execSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
 
 const KEY = process.env.CLICKUP_API_KEY;
-const TASK = process.env.CLICKUP_TASK_ID || "86exvq7wv";
+const cfg = existsSync("clickup.config.json")
+  ? JSON.parse(readFileSync("clickup.config.json", "utf8"))
+  : {};
+const TASK = process.env.CLICKUP_TASK_ID || cfg.changelogTaskId || "86exvq7wv";
 
 if (!KEY) {
   console.error("Missing CLICKUP_API_KEY. Run: CLICKUP_API_KEY=pk_xxx node scripts/clickup-log.mjs");

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "clickup:log": "node scripts/clickup-log.mjs"
+    "clickup:log": "node scripts/clickup-log.mjs",
+    "clickup:sync": "node scripts/clickup-sync.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

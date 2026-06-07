@@ -1,0 +1,6 @@
+#!/bin/sh
+# Auto-log the latest commit to the ClickUp changelog task.
+# Skips silently if CLICKUP_API_KEY is not set in the environment.
+if [ -n "$CLICKUP_API_KEY" ]; then
+  node scripts/clickup-log.mjs >/dev/null 2>&1 || true
+fi
