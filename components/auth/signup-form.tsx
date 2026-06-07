@@ -244,9 +244,17 @@ export function SignupForm() {
                 target="_blank"
                 className="font-medium text-emerald-600 hover:underline"
               >
-                Terms &amp; Conditions
+                Terms
               </Link>{" "}
-              and have read the{" "}
+              and{" "}
+              <Link
+                href="/dpa"
+                target="_blank"
+                className="font-medium text-emerald-600 hover:underline"
+              >
+                Data Processing Agreement
+              </Link>
+              , and have read the{" "}
               <Link
                 href="/privacy"
                 target="_blank"

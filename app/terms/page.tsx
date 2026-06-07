@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LegalLayout, LegalH2 } from "@/components/site/legal-layout";
 
 export const metadata = { title: "Terms of Service | Review Your Doctor" };
@@ -20,6 +21,14 @@ export default function TermsPage() {
         rating.
       </p>
 
+      <LegalH2>No guarantees</LegalH2>
+      <p>
+        The Service facilitates patient feedback and review collection workflows.
+        It does not guarantee review publication, Google ranking improvements,
+        Google Business Profile outcomes, patient acquisition, or changes to
+        clinic revenue.
+      </p>
+
       <LegalH2>Your responsibilities</LegalH2>
       <ul className="list-disc space-y-1 pl-5">
         <li>
@@ -29,6 +38,29 @@ export default function TermsPage() {
         <li>Act as data controller for patient personal data you receive.</li>
         <li>Use patient contact details solely to follow up on feedback.</li>
       </ul>
+
+      <LegalH2>Acceptable use</LegalH2>
+      <p>
+        The clinic must not use the Service to mislead patients, suppress
+        negative feedback, selectively solicit only positive reviews, incentivise
+        reviews without required disclosure, or otherwise breach applicable review
+        platform rules or consumer protection law.
+      </p>
+      <p>
+        The clinic is responsible for ensuring its staff use the QR poster and
+        feedback workflow in a fair, transparent, and non-coercive manner.
+      </p>
+
+      <LegalH2>Data protection</LegalH2>
+      <p>
+        Our{" "}
+        <Link href="/dpa" className="text-emerald-600 hover:underline">
+          Data Processing Agreement
+        </Link>{" "}
+        (Schedule 1) forms part of these Terms and is accepted on sign-up. It sets
+        out our obligations as your data processor under UK GDPR Article 28. You
+        act as the data controller for patient personal data you receive.
+      </p>
 
       <LegalH2>Payment</LegalH2>
       <p>

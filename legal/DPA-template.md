@@ -25,7 +25,9 @@ and follow up privately with patients who report a poor experience.
 - Star rating (always; anonymous for positive ratings)
 - On 1-3★ submissions only, where the patient chooses to provide them: name,
   email address, phone number, and a free-text reason.
-- No special-category (medical) data is processed.
+- No special-category (medical/treatment) data is requested. If a patient
+  voluntarily includes health information in free text, the Clinic (Controller)
+  remains responsible for handling it appropriately.
 
 ## 4. Categories of data subjects
 Patients of the Clinic who submit feedback.
@@ -48,11 +50,17 @@ The Processor shall:
 ## 7. Sub-processors
 The Clinic authorises the following sub-processor:
 
-| Sub-processor | Purpose | Data residency |
+| Sub-processor | Purpose | Data residency / transfer |
 |---|---|---|
 | Supabase | Database, authentication, storage, email function | UK/EU |
+| Vercel | Application hosting, CDN, DNS/edge | Global edge (US company); SCCs / UK Addendum |
+| Email/SMTP provider | Sends the manager alert email | Per configured provider |
+| Google (Places API) | Optional live rating (place identifier only, no patient data) | US; safeguards apply |
+| Payment provider (PayPal/Stripe) | Billing the Clinic (no patient data) | Per provider |
 
 The Processor will inform the Clinic of any intended changes to sub-processors.
+Analytics / error-monitoring providers are not currently used and will be added
+here (consent-gated) before any activation.
 
 ## 8. International transfers
 Personal data is stored within the UK/EU. Any transfer outside the UK will rely

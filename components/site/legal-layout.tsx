@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { CookiePrefsLink } from "@/components/cookie/cookie-prefs-link";
 
 export function LegalLayout({
   title,
@@ -42,6 +43,8 @@ export function LegalLayout({
           <span className="flex gap-4">
             <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground">Terms</Link>
+            <Link href="/dpa" className="hover:text-foreground">DPA</Link>
+            <CookiePrefsLink />
           </span>
         </div>
       </footer>
