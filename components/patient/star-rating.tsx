@@ -2,25 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/browser";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
   slug: string;
   clinicName: string;
   googleReviewUrl: string | null;
-  /** Ratings at or above this go to Google; below are captured privately. */
+  /** Ratings at or above this are treated as positive (messaging only). */
   positiveThreshold: number;
 }
 
 /**
- * The single-decision patient screen: tap a star.
- * 4-5 stars  -> log positive + redirect to Google review page.
- * 1-3 stars  -> route to the private "sorry" contact screen.
- *
- * Designed for minimum effort (Fitts's + Hick's law): large touch targets,
- * one decision, instant visual confirmation before acting.
+ * Patient screen. Tap a star, then EVERY patient is explicitly offered the same
+ * choice to leave a public Google review (compliant: no rating-based gating).
  */
 export function StarRating({
   slug,
@@ -31,36 +28,139 @@ export function StarRating({
   const router = useRouter();
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [step, setStep] = useState<"rate" | "choose">("rate");
+  const [busy, setBusy] = useState(false);
 
-  async function handleSelect(rating: number) {
-    if (submitting) return;
-    setSelected(rating);
-    setSubmitting(true);
+  const positive = selected >= positiveThreshold;
 
-    // At or above the clinic's threshold → send to Google to leave a review.
-    if (rating >= positiveThreshold) {
-      const supabase = createClient();
-      await supabase.rpc("submit_feedback", { p_slug: slug, p_rating: rating });
-      if (googleReviewUrl) {
-        setRedirecting(true);
-        await new Promise((r) => setTimeout(r, 900));
-        window.location.assign(googleReviewUrl);
-      } else {
-        router.push(`/${slug}/ty`);
-      }
-      return;
-    }
-
-    await new Promise((r) => setTimeout(r, 220));
-    router.push(`/${slug}/sorry?r=${rating}`);
+  async function logRating() {
+    const supabase = createClient();
+    await supabase.rpc("submit_feedback", { p_slug: slug, p_rating: selected });
   }
 
-  const display = hovered || selected;
+  function pick(rating: number) {
+    if (busy) return;
+    setSelected(rating);
+    setStep("choose");
+  }
 
+  async function leaveGoogle() {
+    if (busy) return;
+    setBusy(true);
+    await logRating();
+    if (googleReviewUrl) window.location.assign(googleReviewUrl);
+    else router.push(`/${slug}/ty`);
+  }
+
+  async function notNow() {
+    if (busy) return;
+    setBusy(true);
+    await logRating();
+    router.push(`/${slug}/ty`);
+  }
+
+  function sharePrivate() {
+    if (busy) return;
+    router.push(`/${slug}/sorry?r=${selected}`);
+  }
+
+  const cardCls =
+    "flex flex-col items-center gap-6 rounded-3xl border border-border/60 bg-card p-8 text-center shadow-lg shadow-black/5 sm:p-10";
+
+  // ----- Choice step (shown for every rating) -----
+  if (step === "choose") {
+    return (
+      <div className={cardCls}>
+        <SelectedStars value={selected} />
+
+        {positive ? (
+          <>
+            <div className="space-y-2">
+              <h1 className="text-balance text-2xl font-semibold tracking-tight">
+                Thank you for your feedback
+              </h1>
+              <p className="text-pretty text-muted-foreground">
+                Would you like to share your experience publicly on Google?
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3">
+              {googleReviewUrl && (
+                <Button
+                  onClick={leaveGoogle}
+                  disabled={busy}
+                  className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
+                >
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="size-4" />
+                  )}
+                  Leave Google review
+                </Button>
+              )}
+              <Button
+                onClick={notNow}
+                disabled={busy}
+                variant="outline"
+                className="h-12 w-full rounded-xl text-base"
+              >
+                Not now
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <h1 className="text-balance text-2xl font-semibold tracking-tight">
+                We&apos;re sorry your experience wasn&apos;t ideal
+              </h1>
+              <p className="text-pretty text-muted-foreground">
+                You can share private feedback with the clinic so they can follow
+                up, or you can leave a public Google review. It&apos;s your choice.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3">
+              <Button
+                onClick={sharePrivate}
+                disabled={busy}
+                className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
+              >
+                Share private feedback
+              </Button>
+              {googleReviewUrl && (
+                <Button
+                  onClick={leaveGoogle}
+                  disabled={busy}
+                  variant="outline"
+                  className="h-12 w-full rounded-xl text-base"
+                >
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="size-4" />
+                  )}
+                  Leave public Google review
+                </Button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={notNow}
+              disabled={busy}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Skip
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ----- Rating step -----
+  const display = hovered || selected;
   return (
-    <div className="flex flex-col items-center gap-8 rounded-3xl border border-border/60 bg-card p-8 text-center shadow-lg shadow-black/5 sm:p-10">
+    <div className={cardCls}>
       <div className="space-y-2">
         <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
           {clinicName}
@@ -82,15 +182,13 @@ export function StarRating({
               key={value}
               type="button"
               aria-label={`Rate ${value} star${value > 1 ? "s" : ""}`}
-              disabled={submitting}
-              onMouseEnter={() => !submitting && setHovered(value)}
-              onFocus={() => !submitting && setHovered(value)}
-              onClick={() => handleSelect(value)}
+              onMouseEnter={() => setHovered(value)}
+              onFocus={() => setHovered(value)}
+              onClick={() => pick(value)}
               className={cn(
                 "touch-manipulation rounded-2xl p-1.5 transition-transform duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                !submitting && "active:scale-90 hover:scale-105",
-                selected === value && "scale-110",
+                "active:scale-90 hover:scale-105",
               )}
             >
               <Star
@@ -107,21 +205,28 @@ export function StarRating({
         })}
       </div>
 
-      <p className="flex min-h-5 items-center justify-center gap-2 px-2 text-center text-sm text-muted-foreground">
-        {redirecting ? (
-          <>
-            <Loader2 className="size-4 animate-spin text-emerald-600" />
-            Taking you to Google. Please leave us a review there!
-          </>
-        ) : submitting ? (
-          <>
-            <Loader2 className="size-4 animate-spin" />
-            One moment…
-          </>
-        ) : (
-          "Tap a star to rate your experience"
-        )}
+      <p className="text-sm text-muted-foreground">
+        Tap a star to rate your experience
       </p>
+    </div>
+  );
+}
+
+function SelectedStars({ value }: { value: number }) {
+  return (
+    <div className="flex items-center justify-center gap-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={cn(
+            "size-7",
+            i <= value
+              ? "fill-amber-400 text-amber-400"
+              : "fill-muted text-muted-foreground/30",
+          )}
+          strokeWidth={1.5}
+        />
+      ))}
     </div>
   );
 }
