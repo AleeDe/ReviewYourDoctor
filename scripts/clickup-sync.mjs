@@ -62,7 +62,8 @@ for (const file of readdirSync(DIR).filter((f) => f.endsWith(".md"))) {
       { method: "PUT", headers: H,
         body: JSON.stringify({ content: md, content_format: "text/md", content_edit_mode: "replace" }) },
     );
-    r.ok ? pageOk++ : console.error("page fail", name, r.status, await r.text());
+    if (r.ok) pageOk++;
+    else console.error("page fail", name, r.status, await r.text());
   } else missing.push(name + " (page)");
 
   const subId = subByName.get(name);
@@ -70,7 +71,8 @@ for (const file of readdirSync(DIR).filter((f) => f.endsWith(".md"))) {
     const r = await fetch(`https://api.clickup.com/api/v2/task/${subId}`, {
       method: "PUT", headers: H, body: JSON.stringify({ markdown_content: md }),
     });
-    r.ok ? subOk++ : console.error("subtask fail", name, r.status, await r.text());
+    if (r.ok) subOk++;
+    else console.error("subtask fail", name, r.status, await r.text());
   } else missing.push(name + " (subtask)");
 }
 
