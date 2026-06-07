@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { CookieConsent } from "@/components/cookie/cookie-consent";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -40,7 +41,10 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <CookieConsent />
+      </body>
     </html>
   );
 }
