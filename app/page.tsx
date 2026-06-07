@@ -9,11 +9,16 @@ import {
   Smartphone,
   TrendingUp,
   Check,
+  FileText,
+  Cookie,
+  Lock,
+  HeartPulse,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SiteNav } from "@/components/site/nav";
 import { HeroPhone } from "@/components/site/hero-phone";
+import { CookiePrefsLink } from "@/components/cookie/cookie-prefs-link";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { CountUp } from "@/components/motion/count-up";
 
@@ -38,18 +43,17 @@ export default function Home() {
             </StaggerItem>
             <StaggerItem>
               <h1 className="mt-5 text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                More 5-star Google reviews,{" "}
+                More patient feedback,{" "}
                 <span className="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent">
-                  automatically.
+                  and more honest reviews.
                 </span>
               </h1>
             </StaggerItem>
             <StaggerItem>
               <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg lg:mx-0">
-                A frictionless QR feedback form that invites every patient to
-                share their experience, and instantly alerts your manager when
-                someone needs attention, so you can resolve issues before they
-                escalate.
+                The patient feedback and reputation infrastructure for UK dental
+                clinics. Invite every patient to share their experience, catch
+                problems early, and grow your Google reviews, fairly.
               </p>
             </StaggerItem>
             <StaggerItem>
@@ -103,7 +107,7 @@ export default function Home() {
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-6 px-5 py-10 sm:grid-cols-4">
           <Stat value={49} prefix="£" suffix="/mo" label="Flat pricing" />
           <Stat value={30} suffix=" days" label="Free trial" />
-          <Stat value={8} prefix="<" suffix="s" label="To leave a review" />
+          <Stat value={8} prefix="<" suffix="s" label="To rate a visit" />
           <Stat value={0} label="Setup for staff" />
         </div>
       </section>
@@ -115,8 +119,8 @@ export default function Home() {
             How it works
           </h2>
           <p className="mt-3 text-pretty text-muted-foreground">
-            One scan, one tap. Every patient can share their experience, and
-            your manager is alerted the moment someone needs attention.
+            One scan, one tap, one choice. Every patient decides whether to share
+            publicly on Google or privately with the clinic.
           </p>
         </Reveal>
 
@@ -135,19 +139,19 @@ export default function Home() {
           />
           <BentoTile
             icon={<TrendingUp className="size-6 text-emerald-600" />}
-            title="4-5★ → Google"
-            body="Patients who rate 4-5★ are directed to Google to share their experience publicly."
+            title="Choose how to share"
+            body="Every patient is then asked the same thing: leave a public Google review, or send private feedback to the clinic."
           />
           <BentoTile
             className="sm:col-span-2"
             icon={<Bell className="size-6 text-emerald-600" />}
-            title="1-3★ → private alert"
-            body="Patients who rate 1-3★ trigger a private manager alert so you can reach out and make it right. They can still post publicly if they choose."
+            title="Manager follows up"
+            body="Private feedback triggers an instant alert to your manager so you can reach out and make it right, quickly and professionally."
           />
           <BentoTile
             icon={<ShieldCheck className="size-6 text-emerald-600" />}
-            title="Reputation protected"
-            body="Issues are resolved quickly and professionally. Happy patients who share publicly help your rating reflect the quality you deliver."
+            title="Fair by design"
+            body="We never block, filter, or suppress reviews. Every patient can post publicly on Google, whatever their rating."
           />
         </Stagger>
       </section>
@@ -158,21 +162,72 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-3">
             <Feature
               icon={<Smartphone className="size-6" />}
-              title="Effortless for patients"
-              body="Designed around an 8-second interaction: large stars, zero typing, instant redirect."
+              title="Capture more feedback"
+              body="Every visit becomes a chance to hear from patients, not just the unhappy few who post unprompted."
+            />
+            <Feature
+              icon={<Bell className="size-6" />}
+              title="Follow up faster"
+              body="Concerns reach your manager instantly, so you can resolve issues before they escalate, and build stronger local trust."
             />
             <Feature
               icon={<TrendingUp className="size-6" />}
-              title="A dashboard you'll actually read"
-              body="Scans, rating mix, live Google rating and trends, readable in under a minute."
-            />
-            <Feature
-              icon={<ShieldCheck className="size-6" />}
-              title="Private by design"
-              body="Lower ratings trigger a private alert to your manager so you can follow up. Patients always remain free to post publicly."
+              title="Collect reviews fairly"
+              body="Make leaving a Google review effortless for every patient, with no filtering, gating, or pressure."
             />
           </div>
         </div>
+      </section>
+
+      {/* ===== Compliance & trust ===== */}
+      <section className="mx-auto max-w-5xl px-5 py-20 sm:py-24">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+            Built on trust and compliance
+          </h2>
+          <p className="mt-3 text-pretty text-lg font-medium text-emerald-700">
+            We do not block, filter, or suppress reviews.
+          </p>
+          <p className="mt-2 text-pretty text-muted-foreground">
+            Designed as a trust-first, healthcare-adjacent product, not a generic
+            review funnel.
+          </p>
+        </Reveal>
+
+        <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <TrustCard
+            icon={<ShieldCheck className="size-5" />}
+            title="UK GDPR aware"
+            body="Built for UK GDPR and the Data Protection Act 2018."
+            href="/privacy"
+          />
+          <TrustCard
+            icon={<FileText className="size-5" />}
+            title="DPA available"
+            body="A Data Processing Agreement is included with every account."
+            href="/dpa"
+          />
+          <TrustCard
+            icon={<Cookie className="size-5" />}
+            title="Cookie consent"
+            body="Non-essential cookies stay off until the user opts in."
+          />
+          <TrustCard
+            icon={<Lock className="size-5" />}
+            title="Minimal data"
+            body="Contact details are collected only when a patient chooses to share them."
+          />
+          <TrustCard
+            icon={<HeartPulse className="size-5" />}
+            title="No medical data"
+            body="We never request treatment or health information."
+          />
+          <TrustCard
+            icon={<Star className="size-5" />}
+            title="Reviews never gated"
+            body="Every patient can post publicly on Google, whatever their rating."
+          />
+        </Stagger>
       </section>
 
       {/* ===== Pricing ===== */}
@@ -313,6 +368,10 @@ export default function Home() {
               <Link href="/terms" className="hover:text-foreground">
                 Terms
               </Link>
+              <Link href="/dpa" className="hover:text-foreground">
+                DPA
+              </Link>
+              <CookiePrefsLink />
               <a
                 href="mailto:contact@shiftdeploy.com"
                 className="hover:text-foreground"
@@ -415,6 +474,44 @@ function Feature({
         </span>
       </div>
     </Reveal>
+  );
+}
+
+function TrustCard({
+  icon,
+  title,
+  body,
+  href,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  href?: string;
+}) {
+  const inner = (
+    <div className="h-full rounded-2xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+        {icon}
+      </div>
+      <h3 className="mt-3 font-semibold">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+      {href && (
+        <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
+          Learn more <ArrowRight className="size-3.5" />
+        </span>
+      )}
+    </div>
+  );
+  return (
+    <StaggerItem>
+      {href ? (
+        <Link href={href} className="block h-full">
+          {inner}
+        </Link>
+      ) : (
+        inner
+      )}
+    </StaggerItem>
   );
 }
 

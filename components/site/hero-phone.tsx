@@ -42,7 +42,7 @@ export function HeroPhone() {
               ))}
             </div>
             <div className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 py-2.5 text-xs font-semibold text-white shadow">
-              Opening Google…
+              Share your experience?
             </div>
           </div>
         </div>
