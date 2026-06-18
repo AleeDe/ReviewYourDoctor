@@ -37,9 +37,60 @@ export function SignupForm() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [checkEmail, setCheckEmail] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resent, setResent] = useState(false);
 
   const effectiveSlug = slugTouched ? slugify(slug) : slugify(clinicName);
+
+  async function finishSignup() {
+    const supabase = createClient();
+    const { error: rpcErr } = await supabase.rpc("create_my_clinic", {
+      p_clinic_name: clinicName,
+      p_slug: effectiveSlug,
+      p_google_review_url: reviewUrl || null,
+      p_manager_email: email,
+    });
+    if (rpcErr) {
+      setError(rpcErr.message);
+      setSubmitting(false);
+      setVerifying(false);
+      return;
+    }
+    router.push("/dashboard");
+    router.refresh();
+  }
+
+  async function verifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (verifying || !code.trim()) return;
+    setVerifying(true);
+    setError(null);
+    const supabase = createClient();
+    const { data, error: vErr } = await supabase.auth.verifyOtp({
+      email,
+      token: code.trim(),
+      type: "signup",
+    });
+    if (vErr || !data.session) {
+      setError(vErr?.message ?? "Invalid or expired code. Please try again.");
+      setVerifying(false);
+      return;
+    }
+    await finishSignup();
+  }
+
+  async function resendCode() {
+    setError(null);
+    const supabase = createClient();
+    const { error: rErr } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
+    if (rErr) setError(rErr.message);
+    else setResent(true);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,50 +124,71 @@ export function SignupForm() {
       return;
     }
 
-    // Email confirmation ON → no session yet. Clinic is created on the
-    // dashboard after they confirm + log in.
+    // Email confirmation ON → no session yet. Verify the emailed code.
     if (!data.session) {
-      setCheckEmail(true);
+      setOtpStep(true);
       setSubmitting(false);
       return;
     }
 
-    const { error: rpcErr } = await supabase.rpc("create_my_clinic", {
-      p_clinic_name: clinicName,
-      p_slug: effectiveSlug,
-      p_google_review_url: reviewUrl || null,
-      p_manager_email: email,
-    });
-
-    if (rpcErr) {
-      setError(rpcErr.message);
-      setSubmitting(false);
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
+    await finishSignup();
   }
 
-  if (checkEmail) {
+  if (otpStep) {
     return (
       <Card className="w-full rounded-2xl shadow-lg shadow-black/5">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 grid size-12 place-items-center rounded-full bg-emerald-50 text-emerald-600">
             <MailCheck className="size-6" />
           </div>
-          <CardTitle className="text-2xl">Check your email</CardTitle>
+          <CardTitle className="text-2xl">Confirm your email</CardTitle>
           <CardDescription>
-            We sent a confirmation link to <strong>{email}</strong>. Confirm it,
-            then log in to finish setting up your clinic.
+            Enter the 6-digit code we sent to <strong>{email}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/login" className="block">
-            <Button className="h-12 w-full rounded-xl text-base">
-              Go to login
+          <form onSubmit={verifyCode} className="flex flex-col gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="code">Confirmation code</Label>
+              <Input
+                id="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={code}
+                onChange={(e) =>
+                  setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
+                placeholder="123456"
+                className="h-12 rounded-xl text-center text-lg tracking-[0.4em]"
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button
+              type="submit"
+              disabled={verifying || code.length < 6}
+              className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Verifying…
+                </>
+              ) : (
+                "Confirm & create account"
+              )}
             </Button>
-          </Link>
+            <p className="text-center text-sm text-muted-foreground">
+              Didn&apos;t get it?{" "}
+              <button
+                type="button"
+                onClick={resendCode}
+                className="font-medium text-emerald-600 hover:underline"
+              >
+                Resend code
+              </button>
+              {resent && <span className="ml-1 text-emerald-600">Sent!</span>}
+            </p>
+          </form>
         </CardContent>
       </Card>
     );
