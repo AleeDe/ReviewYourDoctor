@@ -18,6 +18,7 @@ import { CreateClinicForm } from "@/components/admin/create-clinic-form";
 import { QrCode } from "@/components/admin/qr-code";
 import { AdminGoogleConnect } from "@/components/admin/admin-google-connect";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import { toggleClinicActive } from "./actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,6 +150,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       </AppHeader>
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        {/* Live updates: new sign-ups / feedback appear without reload */}
+        <RealtimeRefresh tables={["clinics", "submissions"]} channel="admin" />
+
         {/* KPI tiles */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard

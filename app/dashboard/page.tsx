@@ -22,11 +22,11 @@ import {
 import { StatCard } from "@/components/dashboard/stat-card";
 import { LogoUpload } from "@/components/dashboard/logo-upload";
 import { GoogleConnect } from "@/components/dashboard/google-connect";
-import { ReviewThreshold } from "@/components/dashboard/review-threshold";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { NegativeFeedback } from "@/components/dashboard/negative-feedback";
 import { CreateClinicOnboarding } from "@/components/dashboard/create-clinic-onboarding";
 import { BrandedQrCard } from "@/components/qr/branded-qr-card";
+import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -243,6 +243,21 @@ export default async function DashboardPage() {
       : 0;
   const trend = buildTrend(submissions);
 
+  // Prefer the live Google rating; otherwise fall back to the average of
+  // ratings collected through Review Your Doctor.
+  const dbAverage =
+    totalAllTime > 0
+      ? submissions.reduce((s, x) => s + x.star_rating, 0) / totalAllTime
+      : 0;
+  const usingLive = liveRating.rating != null;
+  const ratingValue = liveRating.rating ?? dbAverage;
+  const ratingLabel = usingLive ? "Live Google rating" : "Average rating";
+  const ratingHint = usingLive
+    ? liveRating.reviewCount != null
+      ? `${liveRating.reviewCount} Google reviews`
+      : "from Google"
+    : `based on ${totalAllTime} rating${totalAllTime === 1 ? "" : "s"}`;
+
   return (
     <div className="min-h-dvh bg-muted/30">
       <AppHeader
@@ -255,6 +270,9 @@ export default async function DashboardPage() {
       </AppHeader>
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+        {/* Live updates: refresh when new feedback arrives, no manual reload */}
+        <RealtimeRefresh tables={["submissions"]} channel="dashboard" />
+
         {/* Quick actions: one tap to share/open the form (KLM + Fitts) */}
         <QuickActions slug={clinic.slug} siteUrl={siteUrl()} />
 
@@ -262,15 +280,11 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             feature
-            label="Live Google rating"
-            value={liveRating.rating ?? 0}
+            label={ratingLabel}
+            value={ratingValue}
             decimals={1}
             suffix=" ★"
-            hint={
-              liveRating.reviewCount != null
-                ? `${liveRating.reviewCount} Google reviews`
-                : "Connect a Google Place ID"
-            }
+            hint={ratingHint}
             icon={<Star className="size-5" />}
           />
           <StatCard
@@ -336,8 +350,6 @@ export default async function DashboardPage() {
                 connected={Boolean(clinic.google_review_url)}
                 currentReviewUrl={clinic.google_review_url}
               />
-              <Separator />
-              <ReviewThreshold current={clinic.positive_threshold} />
               <Separator />
               <LogoUpload clinicId={clinic.id} currentLogoUrl={clinic.logo_url} />
               <Separator />
