@@ -26,6 +26,22 @@ export function LoginForm() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [mode, setMode] = useState<"signin" | "reset">("signin");
+  const [resetSent, setResetSent] = useState(false);
+
+  async function sendReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting || !email) return;
+    setSubmitting(true);
+    setError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSubmitting(false);
+    if (error) setError(error.message);
+    else setResetSent(true);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,6 +62,80 @@ export function LoginForm() {
 
     router.push(redirect);
     router.refresh();
+  }
+
+  if (mode === "reset") {
+    return (
+      <Card className="w-full rounded-2xl shadow-xl shadow-emerald-900/5">
+        <CardHeader>
+          <CardTitle className="text-2xl">Reset password</CardTitle>
+          <CardDescription>
+            {resetSent
+              ? "Check your email for a link to reset your password."
+              : "Enter your email and we'll send you a reset link."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {resetSent ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMode("signin");
+                setResetSent(false);
+              }}
+              className="text-sm font-medium text-emerald-600 hover:underline"
+            >
+              Back to sign in
+            </button>
+          ) : (
+            <form onSubmit={sendReset} className="flex flex-col gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="reset-email">Email</Label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    inputMode="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    placeholder="you@clinic.co.uk"
+                    className="h-12 rounded-xl pl-10"
+                  />
+                </div>
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Sending…
+                  </>
+                ) : (
+                  "Send reset link"
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signin");
+                  setError(null);
+                }}
+                className="text-center text-sm text-muted-foreground hover:text-foreground"
+              >
+                Back to sign in
+              </button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -77,7 +167,19 @@ export function LoginForm() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("reset");
+                  setError(null);
+                }}
+                className="text-xs font-medium text-emerald-600 hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
