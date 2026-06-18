@@ -63,18 +63,19 @@ export default function Home() {
                   className={buttonVariants({
                     size: "lg",
                     className:
-                      "group h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-7 text-base shadow-lg shadow-emerald-600/20 hover:from-emerald-500 hover:to-green-700 sm:w-auto",
+                      "group h-14 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-8 text-base font-semibold shadow-xl shadow-emerald-600/30 ring-1 ring-emerald-500/30 hover:from-emerald-500 hover:to-green-700 hover:shadow-emerald-600/40 sm:w-auto",
                   })}
                 >
                   Start your free trial
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="size-5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
                   href="/login"
                   className={buttonVariants({
                     variant: "outline",
                     size: "lg",
-                    className: "h-12 w-full rounded-xl px-7 text-base sm:w-auto",
+                    className:
+                      "h-14 w-full rounded-xl border-2 px-8 text-base font-medium sm:w-auto",
                   })}
                 >
                   Clinic login
@@ -113,7 +114,7 @@ export default function Home() {
       </section>
 
       {/* ===== How it works (bento) ===== */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:py-24">
+      <section id="how" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-20 sm:py-24">
         <Reveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
             How it works
@@ -231,7 +232,7 @@ export default function Home() {
       </section>
 
       {/* ===== Pricing ===== */}
-      <section id="pricing" className="mx-auto max-w-5xl px-5 py-20 sm:py-24">
+      <section id="pricing" className="mx-auto max-w-5xl scroll-mt-24 px-5 py-20 sm:py-24">
         <Reveal className="mx-auto max-w-md">
           <div className="rounded-3xl border bg-card p-8 text-center shadow-sm">
             <h2 className="text-3xl font-bold tracking-tight">Simple pricing</h2>
@@ -269,7 +270,7 @@ export default function Home() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section className="border-t bg-muted/40">
+      <section id="faq" className="scroll-mt-24 border-t bg-muted/40">
         <div className="mx-auto max-w-3xl px-5 py-20 sm:py-24">
           <Reveal className="text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -469,9 +470,6 @@ function Feature({
         </div>
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm text-muted-foreground">{body}</p>
-        <span className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
-          <Check className="size-4" /> Built into V1
-        </span>
       </div>
     </Reveal>
   );

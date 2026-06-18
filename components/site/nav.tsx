@@ -14,6 +14,20 @@ export function SiteNav() {
           />
           <span className="hidden sm:inline">Review Your Doctor</span>
         </Link>
+
+        {/* Section links (desktop) */}
+        <nav className="hidden items-center gap-1 md:flex">
+          <a href="#how" className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            How it works
+          </a>
+          <a href="#pricing" className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            Pricing
+          </a>
+          <a href="#faq" className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            FAQ
+          </a>
+        </nav>
+
         <nav className="flex items-center gap-1.5">
           <Link
             href="/login"
