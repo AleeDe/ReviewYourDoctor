@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     try {
       await client.send({
         from: `Review Your Doctor <${from}>`,
-        to: recipients,
+        to: recipients.split(",").map((r) => r.trim()).filter(Boolean),
         subject: `Clinic approval needed - ${clinic.clinic_name}`,
         content: [
           `New clinic signup: ${clinic.clinic_name}`,
@@ -60,7 +60,11 @@ Deno.serve(async (req) => {
         ].filter(Boolean).join("\n"),
       });
     } finally {
-      await client.close();
+      try {
+        await client.close();
+      } catch (_) {
+        // denomailer throws on close after a failed connection - ignore.
+      }
     }
     return ok({ sent: true });
   } catch (error) {

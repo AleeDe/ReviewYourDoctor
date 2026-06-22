@@ -79,7 +79,11 @@ Deno.serve(async (req) => {
         ].join("\n"),
       });
     } finally {
-      await client.close();
+      try {
+        await client.close();
+      } catch (_) {
+        // denomailer can throw on close after a failed connection - ignore.
+      }
     }
 
     await supabase.from("clinics").update({
