@@ -1,8 +1,9 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const allowedOrigin = Deno.env.get("SITE_URL") ?? "*";
+// Public existence check (boolean only, no credentials) -> allow any origin so
+// it works on localhost, preview, and production without CORS issues.
 const corsHeaders = {
-  "Access-Control-Allow-Origin": allowedOrigin,
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
