@@ -73,6 +73,9 @@ export async function createClinic(
       google_place_id: googlePlaceId,
       owner_user_id: created.user.id,
       is_active: true,
+      approved_at: new Date().toISOString(),
+      trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+      billing_status: "trial",
     });
 
     if (clinicErr) {
@@ -121,12 +124,44 @@ export async function toggleClinicActive(formData: FormData): Promise<void> {
   if (!id) return;
 
   const admin = createAdminClient();
+  const { data: clinic } = await admin
+    .from("clinics")
+    .select("approved_at")
+    .eq("id", id)
+    .maybeSingle();
+  const startsFirstTrial = next && !clinic?.approved_at;
   await admin
     .from("clinics")
     .update({
       is_active: next,
-      ...(next ? { approved_at: new Date().toISOString() } : {}),
+      ...(startsFirstTrial
+        ? {
+            approved_at: new Date().toISOString(),
+            trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+            billing_status: "trial",
+            trial_reminder_days: null,
+          }
+        : {}),
     })
     .eq("id", id);
   revalidatePath("/admin");
+}
+
+export async function updateClinicBilling(formData: FormData): Promise<void> {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("billing_status") ?? "");
+  const paidUntil = String(formData.get("paid_until") ?? "");
+  if (!id || !["trial", "paid", "past_due", "cancelled"].includes(status)) return;
+
+  const admin = createAdminClient();
+  await admin
+    .from("clinics")
+    .update({
+      billing_status: status,
+      paid_until: paidUntil ? new Date(`${paidUntil}T23:59:59Z`).toISOString() : null,
+    })
+    .eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/browser";
@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { MailCheck, Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
+
+type EmailStatus = "idle" | "checking" | "available" | "registered" | "error";
 
 function slugify(input: string): string {
   return input
@@ -41,6 +43,49 @@ export function SignupForm() {
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resent, setResent] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+
+  async function checkEmail(candidate: string): Promise<boolean | null> {
+    const normalized = candidate.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(normalized)) return null;
+
+    setEmailStatus("checking");
+    const supabase = createClient();
+    const { data, error: checkError } = await supabase.functions.invoke(
+      "check-email",
+      { body: { email: normalized } },
+    );
+    if (checkError || typeof data?.registered !== "boolean") {
+      setEmailStatus("error");
+      return null;
+    }
+    setEmailStatus(data.registered ? "registered" : "available");
+    return data.registered;
+  }
+
+  useEffect(() => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return;
+    let cancelled = false;
+    const candidate = email.trim().toLowerCase();
+    const timer = window.setTimeout(async () => {
+      setEmailStatus("checking");
+      const supabase = createClient();
+      const { data, error: checkError } = await supabase.functions.invoke(
+        "check-email",
+        { body: { email: candidate } },
+      );
+      if (cancelled) return;
+      if (checkError || typeof data?.registered !== "boolean") {
+        setEmailStatus("error");
+      } else {
+        setEmailStatus(data.registered ? "registered" : "available");
+      }
+    }, 450);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [email]);
 
   const effectiveSlug = slugTouched ? slugify(slug) : slugify(clinicName);
 
@@ -109,6 +154,12 @@ export function SignupForm() {
       return;
     }
 
+    const registered = await checkEmail(email);
+    if (registered) {
+      setError("This email already has an account. Log in or reset your password instead.");
+      return;
+    }
+
     setSubmitting(true);
     const supabase = createClient();
 
@@ -143,7 +194,7 @@ export function SignupForm() {
           </div>
           <CardTitle className="text-2xl">Confirm your email</CardTitle>
           <CardDescription>
-            Enter the 6-digit code we sent to <strong>{email}</strong>.
+            Enter the confirmation code we sent to <strong>{email}</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,9 +207,10 @@ export function SignupForm() {
                 autoComplete="one-time-code"
                 value={code}
                 onChange={(e) =>
-                  setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setCode(e.target.value.replace(/\D/g, "").slice(0, 9))
                 }
-                placeholder="123456"
+                maxLength={9}
+                placeholder="Enter your code"
                 className="h-12 rounded-xl text-center text-lg tracking-[0.4em]"
               />
             </div>
@@ -256,12 +308,34 @@ export function SignupForm() {
                 inputMode="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailStatus("idle");
+                }}
                 autoComplete="email"
                 placeholder="you@clinic.co.uk"
                 className="h-11 rounded-xl pl-10"
+                aria-invalid={emailStatus === "registered"}
               />
             </div>
+            {emailStatus === "checking" && (
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="size-3 animate-spin" /> Checking email...
+              </p>
+            )}
+            {emailStatus === "available" && (
+              <p className="text-xs text-emerald-600">Email is available.</p>
+            )}
+            {emailStatus === "registered" && (
+              <p className="text-xs text-destructive">
+                This email is already registered. Log in or reset your password.
+              </p>
+            )}
+            {emailStatus === "error" && (
+              <p className="text-xs text-amber-600">
+                We could not check this email yet. We will retry when you submit.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -342,7 +416,7 @@ export function SignupForm() {
 
           <Button
             type="submit"
-            disabled={submitting || !agreed}
+            disabled={submitting || !agreed || emailStatus === "checking" || emailStatus === "registered"}
             className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-base hover:from-emerald-500 hover:to-green-700"
           >
             {submitting ? (

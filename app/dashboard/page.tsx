@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   Circle,
   Lock,
+  CreditCard,
+  AlertTriangle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getLiveRating } from "@/lib/google/places";
@@ -242,6 +244,11 @@ export default async function DashboardPage() {
       ? Math.round(((totalAllTime - negatives.length) / totalAllTime) * 100)
       : 0;
   const trend = buildTrend(submissions);
+  const billingUrl = process.env.NEXT_PUBLIC_BILLING_URL;
+  const billingNow = new Date().getTime();
+  const trialDays = clinic.trial_ends_at
+    ? Math.ceil((new Date(clinic.trial_ends_at).getTime() - billingNow) / 86400000)
+    : null;
 
   // Prefer the live Google rating; otherwise fall back to the average of
   // ratings collected through Review Your Doctor.
@@ -275,6 +282,50 @@ export default async function DashboardPage() {
 
         {/* Quick actions: one tap to share/open the form (KLM + Fitts) */}
         <QuickActions slug={clinic.slug} siteUrl={siteUrl()} />
+
+        {(clinic.billing_status !== "paid" || clinic.paid_until) && (
+          <Card className={clinic.billing_status === "past_due" ? "rounded-2xl border-amber-300 bg-amber-50/50" : "rounded-2xl"}>
+            <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                {clinic.billing_status === "past_due" ? (
+                  <AlertTriangle className="mt-0.5 size-5 text-amber-600" />
+                ) : (
+                  <CreditCard className="mt-0.5 size-5 text-emerald-600" />
+                )}
+                <div>
+                  <p className="font-semibold">
+                    {clinic.billing_status === "paid"
+                      ? "Subscription active"
+                      : clinic.billing_status === "past_due"
+                        ? "Payment is due"
+                        : clinic.billing_status === "cancelled"
+                          ? "Subscription cancelled"
+                          : "30-day free trial"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {clinic.billing_status === "paid" && clinic.paid_until
+                      ? `Paid through ${new Date(clinic.paid_until).toLocaleDateString("en-GB")}.`
+                      : clinic.billing_status === "trial" && trialDays !== null
+                        ? trialDays < 0
+                          ? "Your trial has ended. Subscribe to continue for £49/month."
+                          : `${trialDays} day${trialDays === 1 ? "" : "s"} remaining, then £49/month.`
+                        : "Contact ShiftDeploy if you need help with your subscription."}
+                  </p>
+                </div>
+              </div>
+              {billingUrl && clinic.billing_status !== "paid" && clinic.billing_status !== "cancelled" && (
+                <a
+                  href={billingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={buttonVariants({ className: "h-10 rounded-xl" })}
+                >
+                  <CreditCard className="size-4" /> Pay securely
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Bento stat tiles */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

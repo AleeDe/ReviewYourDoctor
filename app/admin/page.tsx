@@ -9,6 +9,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  CalendarDays,
+  CreditCard,
+  BellRing,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -19,7 +22,7 @@ import { QrCode } from "@/components/admin/qr-code";
 import { AdminGoogleConnect } from "@/components/admin/admin-google-connect";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
-import { toggleClinicActive } from "./actions";
+import { toggleClinicActive, updateClinicBilling } from "./actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +51,20 @@ function initialsOf(name: string) {
       .join("")
       .toUpperCase() || "C"
   );
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "Not set";
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function daysUntil(value: string | null) {
+  if (!value) return null;
+  return Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
 }
 
 interface AdminPageProps {
@@ -80,9 +97,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     new Date().getMonth(),
     1,
   ).toISOString();
+  const sevenDays = new Date();
+  sevenDays.setDate(sevenDays.getDate() + 7);
+  const sevenDaysISO = sevenDays.toISOString();
 
   // Counts only: never load 4,000 rows just for stats.
-  const [totalRes, pendingRes, monthRes, pendingListRes] = await Promise.all([
+  const [totalRes, pendingRes, monthRes, pendingListRes, trialDueRes] = await Promise.all([
     admin.from("clinics").select("*", { count: "exact", head: true }),
     admin
       .from("clinics")
@@ -98,12 +118,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       .eq("is_active", false)
       .order("created_at", { ascending: false })
       .limit(10),
+    admin
+      .from("clinics")
+      .select("*", { count: "exact", head: true })
+      .in("billing_status", ["trial", "past_due"])
+      .not("trial_ends_at", "is", null)
+      .lte("trial_ends_at", sevenDaysISO),
   ]);
 
   const totalCount = totalRes.count ?? 0;
   const pendingCount = pendingRes.count ?? 0;
   const activeCount = totalCount - pendingCount;
   const newThisMonth = monthRes.count ?? 0;
+  const trialsDue = trialDueRes.count ?? 0;
   const pending = (pendingListRes.data ?? []) as Clinic[];
   const pendingTotal = pendingListRes.count ?? 0;
 
@@ -154,7 +181,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         <RealtimeRefresh tables={["clinics", "submissions"]} channel="admin" />
 
         {/* KPI tiles */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             feature
             label="Pending approval"
@@ -179,6 +206,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             value={newThisMonth}
             hint="sign-ups"
             icon={<TrendingUp className="size-5" />}
+          />
+          <StatCard
+            label="Trials ending"
+            value={trialsDue}
+            hint="within 7 days or overdue"
+            icon={<BellRing className="size-5" />}
           />
         </div>
 
@@ -309,8 +342,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       >
                         {formUrl}
                       </a>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><CalendarDays className="size-3" /> Registered {formatDate(c.created_at)}</span>
+                        <span className="flex items-center gap-1"><Clock className="size-3" /> Trial {formatDate(c.trial_ends_at)}</span>
+                        <span className="flex items-center gap-1 capitalize"><CreditCard className="size-3" /> {c.billing_status.replace("_", " ")}</span>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-4">
+                    <div className="flex shrink-0 flex-wrap items-center gap-3">
                       <QrCode slug={c.slug} siteUrl={siteUrl} />
                       <form action={toggleClinicActive}>
                         <input type="hidden" name="id" value={c.id} />
@@ -322,6 +360,23 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         <Button type="submit" variant="outline" size="sm">
                           {c.is_active ? "Deactivate" : "Activate"}
                         </Button>
+                      </form>
+                      <form action={updateClinicBilling} className="flex flex-wrap items-end gap-2 rounded-lg border p-2">
+                        <input type="hidden" name="id" value={c.id} />
+                        <label className="grid gap-1 text-xs text-muted-foreground">
+                          Billing
+                          <select name="billing_status" defaultValue={c.billing_status} className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+                            <option value="trial">Trial</option>
+                            <option value="paid">Paid</option>
+                            <option value="past_due">Past due</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1 text-xs text-muted-foreground">
+                          Paid until
+                          <Input name="paid_until" type="date" defaultValue={c.paid_until?.slice(0, 10) ?? ""} className="h-8 w-36" />
+                        </label>
+                        <Button type="submit" variant="outline" size="sm">Save billing</Button>
                       </form>
                     </div>
                   </div>
@@ -405,6 +460,7 @@ function PagerLink({
 }
 
 function ClinicIdentity({ clinic: c }: { clinic: Clinic }) {
+  const trialDays = daysUntil(c.trial_ends_at);
   return (
     <div className="flex items-center gap-3">
       <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl border bg-card">
@@ -430,6 +486,12 @@ function ClinicIdentity({ clinic: c }: { clinic: Clinic }) {
         </div>
         <p className="truncate text-xs text-muted-foreground">
           /{c.slug} · {c.manager_email}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Registered {formatDate(c.created_at)}
+          {c.trial_ends_at
+            ? ` · Trial ${trialDays !== null && trialDays < 0 ? "ended" : "ends"} ${formatDate(c.trial_ends_at)}`
+            : " · Trial starts on approval"}
         </p>
       </div>
     </div>

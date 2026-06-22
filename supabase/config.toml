@@ -4,3 +4,12 @@ project_id = "review-your-doctor"
 
 [functions.send-negative-alert]
 verify_jwt = false
+
+[functions.check-email]
+verify_jwt = false
+
+[functions.send-clinic-signup-alert]
+verify_jwt = false
+
+[functions.send-trial-reminders]
+verify_jwt = false

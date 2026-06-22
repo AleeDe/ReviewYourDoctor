@@ -22,7 +22,8 @@ Vercel + Supabase.
 | Charts | recharts | Dashboard |
 | QR codes | `qrcode` + `html-to-image` | Branded poster (logo + ShiftDeploy), download PNG |
 | Live rating | Google Places API (Place Details v1) | Server-side, cached 1h |
-| Email alerts | Supabase Edge Function + SMTP (denomailer) | Fires on negative submission |
+| Email alerts | Supabase Edge Functions + SMTP (denomailer) | Negative feedback, signup approval, trial reminders |
+| Billing | Provider-neutral payment link + database status | Admin-managed trial, paid-through and collection state |
 | Animation | Framer Motion | Landing + dashboard micro-motion, reduced-motion aware |
 | Logo storage | Supabase Storage (`clinic-logos`, public read) | Owner-scoped write via RLS |
 
@@ -34,7 +35,7 @@ Vercel + Supabase.
 - `/[slug]/ty` — generic thank-you
 - `/login` — clinic dashboard login
 - `/dashboard` — clinic analytics + branded QR + logo upload (auth, owner-scoped)
-- `/admin` — founder-only approval queue, onboarding + QR generation
+- `/admin` — founder-only approval queue, trial/billing controls, onboarding + QR generation
 - `/auth/signout` — POST sign-out
 
 ### Security model
@@ -68,11 +69,12 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` in dev; your domain in prod |
 | `ADMIN_EMAILS` | comma-separated founder emails allowed into `/admin` |
 | `GOOGLE_PLACES_API_KEY` | Google Cloud Console (Places API) |
+| `NEXT_PUBLIC_BILLING_URL` | Hosted Stripe/PayPal payment link shown to clinics |
 
 The `SMTP_*` / `ALERT_FROM_EMAIL` values are **Supabase function secrets**, not Next.js env (see §5).
 
 ## 3. Apply the database schema
-Run the SQL in `supabase/migrations/` **in order** (0001 → 0007). Either:
+Run the SQL in `supabase/migrations/` **in order** (0001 through 0010). Either:
 
 **Option A — Supabase SQL Editor:** paste each file's contents and run.
 
@@ -91,10 +93,10 @@ broken `auth.users` trigger — harmless to run.
 
 ### Self-serve signup (pending → approval)
 Businesses sign up at `/signup`. The account + clinic are created **inactive**; the patient
-form stays hidden until you **Approve & activate** them in `/admin`. For a frictionless trial,
-turn **Authentication → Sign In/Up → Confirm email = OFF** (approval is manual anyway). If you
-leave email confirmation ON, the business confirms via email, logs in, then finishes creating
-their clinic from the dashboard.
+form stays hidden until you **Approve & activate** them in `/admin`. Keep
+**Authentication > Sign In/Up > Confirm email = ON** and put `{{ .Token }}` in the Confirm-signup
+email template. The form accepts confirmation tokens up to nine digits. Trial time starts only
+when an admin first approves the clinic.
 
 ### ShiftDeploy logo on the QR poster
 Drop your logo at `public/shiftdeploy-logo.svg` — it renders at the bottom of every branded QR
@@ -115,7 +117,7 @@ Admin access is gated by `ADMIN_EMAILS`. Create a Supabase Auth user with that e
 (Supabase → Authentication → Add user), log in at `/login`, then open `/admin` to onboard
 clinics. Each clinic you create gets its own dashboard login automatically.
 
-## 5. Email alerts (Supabase Edge Function + SMTP)
+## 5. Email alerts, signup checks and reminders
 The function in `supabase/functions/send-negative-alert/` emails the manager over SMTP
 when a negative submission is inserted (no third-party API — works with Gmail or any host).
 
@@ -137,6 +139,22 @@ Then wire a **Database Webhook** (Supabase → Database → Webhooks):
 - Type: **Supabase Edge Functions** → `send-negative-alert`
 
 The function ignores positive submissions, so the webhook can fire on all inserts.
+
+Deploy the operational functions too:
+
+```bash
+supabase functions deploy check-email --no-verify-jwt
+supabase functions deploy send-clinic-signup-alert --no-verify-jwt
+supabase functions deploy send-trial-reminders --no-verify-jwt
+supabase secrets set SITE_URL=https://your-domain.example \
+  ADMIN_ALERT_EMAILS=admin@example.com \
+  BILLING_URL=https://your-payment-provider.example/link \
+  CRON_SECRET=your-long-random-secret
+```
+
+Add an Insert webhook on `public.clinics` to `send-clinic-signup-alert`. Schedule a daily POST to
+`send-trial-reminders` with header `x-cron-secret: <CRON_SECRET>`. It emails clinics near expiry
+and marks an expired trial `past_due`. Apply migration 0010 before deploying `check-email`.
 
 > **Port:** use `465` for implicit TLS or `587` for STARTTLS. **Gmail:** enable 2-Step
 > Verification, then create an **App Password** (Google Account → Security → App passwords)
@@ -175,5 +193,5 @@ proxy.ts        # session refresh + route protection
 ```
 
 ## Out of scope (V2)
-Twilio SMS, Stripe billing, PowerSync offline, doctor-specific ratings, Doctify,
+Twilio SMS, provider webhook-based billing reconciliation, PowerSync offline, doctor-specific ratings, Doctify,
 founder analytics dashboard, mobile app, white-label.

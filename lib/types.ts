@@ -17,6 +17,10 @@ export interface Clinic {
   trial_ends_at: string | null;
   approved_at: string | null;
   is_active: boolean;
+  billing_status: "trial" | "paid" | "past_due" | "cancelled";
+  paid_until: string | null;
+  trial_reminder_days: number | null;
+  trial_reminder_sent_at: string | null;
 }
 
 /** Public-facing subset returned by the get_clinic_public RPC. */
