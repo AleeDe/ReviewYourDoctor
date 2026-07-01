@@ -30,28 +30,51 @@ export function LiveNegativeFeedback({
 
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase
-      .channel(`neg-${clinicId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "submissions",
-          filter: `clinic_id=eq.${clinicId}`,
-        },
-        (payload) => {
-          const s = payload.new as Submission;
-          if (s.is_positive) return;
-          setRows((prev) =>
-            prev.some((p) => p.id === s.id) ? prev : [s, ...prev],
-          );
-        },
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    const onInsert = (payload: { new: Submission }) => {
+      const s = payload.new;
+      if (s.is_positive) return;
+      setRows((prev) =>
+        prev.some((p) => p.id === s.id) ? prev : [s, ...prev],
+      );
+    };
+
+    (async () => {
+      // RLS-scoped Realtime only delivers rows the socket is authorised for, so
+      // the socket MUST carry the owner's JWT. With cookie-based SSR sessions
+      // that isn't guaranteed at subscribe time, so set it explicitly first.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      supabase.realtime.setAuth(session?.access_token ?? null);
+
+      channel = supabase
+        .channel(`neg-${clinicId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "submissions",
+            filter: `clinic_id=eq.${clinicId}`,
+          },
+          onInsert,
+        )
+        .subscribe();
+    })();
+
+    // Keep the socket authorised across token refreshes.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      supabase.realtime.setAuth(session?.access_token ?? null);
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      sub.subscription.unsubscribe();
+      if (channel) supabase.removeChannel(channel);
     };
   }, [clinicId]);
 

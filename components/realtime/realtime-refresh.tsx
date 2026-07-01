@@ -27,14 +27,35 @@ export function RealtimeRefresh({
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => router.refresh(), 700);
     };
-    const ch = supabase.channel(`${channel}-${tables.join("-")}`);
-    for (const table of tables) {
-      ch.on("postgres_changes", { event: "*", schema: "public", table }, refresh);
-    }
-    ch.subscribe();
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    (async () => {
+      // RLS-scoped Realtime drops events the socket isn't authorised for, so the
+      // socket must carry the user's JWT. Cookie-based SSR sessions don't set it
+      // reliably at subscribe time, so set it explicitly before subscribing.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      supabase.realtime.setAuth(session?.access_token ?? null);
+
+      ch = supabase.channel(`${channel}-${tables.join("-")}`);
+      for (const table of tables) {
+        ch.on("postgres_changes", { event: "*", schema: "public", table }, refresh);
+      }
+      ch.subscribe();
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      supabase.realtime.setAuth(session?.access_token ?? null);
+    });
+
     return () => {
+      cancelled = true;
       if (timer) clearTimeout(timer);
-      supabase.removeChannel(ch);
+      sub.subscription.unsubscribe();
+      if (ch) supabase.removeChannel(ch);
     };
   }, [tables, channel, router]);
   return null;
