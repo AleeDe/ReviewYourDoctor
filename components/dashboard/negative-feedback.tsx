@@ -31,13 +31,21 @@ function Detail({ label, value }: { label: string; value: string | null }) {
  * One-tap Call/Email (KLM), large targets (Fitts), newest first (recency).
  */
 export function NegativeFeedback({ negatives }: { negatives: Submission[] }) {
+  // Only surface real private feedback we can actually follow up with. Bare
+  // rating-only rows (patient skipped the form) would otherwise render as empty
+  // "ghost" entries with nothing to action.
+  const actionable = negatives.filter(
+    (s) => s.name || s.reason || s.email || s.phone,
+  );
+  const anonymousCount = negatives.length - actionable.length;
+  negatives = actionable;
   return (
     <Card className="rounded-2xl">
       <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
         <div>
           <CardTitle className="text-base">Reach out & resolve</CardTitle>
           <CardDescription>
-            Patients who rated 1-3★. Contact them privately.
+            Patients who rated 1-3★ and left their details. Contact them privately.
           </CardDescription>
         </div>
         {negatives.length > 0 && (
@@ -52,7 +60,9 @@ export function NegativeFeedback({ negatives }: { negatives: Submission[] }) {
             <PartyPopper className="size-8 text-emerald-500" />
             <p className="text-sm font-medium">All caught up</p>
             <p className="text-sm text-muted-foreground">
-              No negative feedback to follow up.
+              {anonymousCount > 0
+                ? `No private feedback to follow up (${anonymousCount} anonymous low rating${anonymousCount === 1 ? "" : "s"}).`
+                : "No negative feedback to follow up."}
             </p>
           </div>
         ) : (
@@ -170,6 +180,12 @@ export function NegativeFeedback({ negatives }: { negatives: Submission[] }) {
                 </TableBody>
               </Table>
             </div>
+            {anonymousCount > 0 && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                + {anonymousCount} anonymous low rating
+                {anonymousCount === 1 ? "" : "s"} (no details shared).
+              </p>
+            )}
           </>
         )}
       </CardContent>

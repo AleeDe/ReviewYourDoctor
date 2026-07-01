@@ -25,7 +25,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { LogoUpload } from "@/components/dashboard/logo-upload";
 import { GoogleConnect } from "@/components/dashboard/google-connect";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { NegativeFeedback } from "@/components/dashboard/negative-feedback";
+import { LiveNegativeFeedback } from "@/components/dashboard/live-negative-feedback";
 import { CreateClinicOnboarding } from "@/components/dashboard/create-clinic-onboarding";
 import { BrandedQrCard } from "@/components/qr/branded-qr-card";
 import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
@@ -385,7 +385,7 @@ export default async function DashboardPage() {
         <div className="grid items-start gap-4 lg:grid-cols-3">
           {/* Negative feedback = the action centre (Fitts/Hick: primary task, F-pattern left) */}
           <div className="lg:col-span-2">
-            <NegativeFeedback negatives={negatives} />
+            <LiveNegativeFeedback clinicId={clinic.id} initial={negatives} />
           </div>
 
           {/* Branding + poster grouped together (Gestalt proximity, no empty card) */}

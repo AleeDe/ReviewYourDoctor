@@ -14,9 +14,9 @@ interface NegativeFormProps {
 }
 
 /**
- * Private capture screen for 1-3 star ratings. All fields are optional:
- * tapping Submit with empty fields still records the negative signal (and
- * fires the manager alert) rather than blocking with a validation error.
+ * Private capture screen for 1-3 star ratings. Name is required so the clinic
+ * can follow up; email and phone are optional. On failure we surface a gentle
+ * retry rather than silently pretending it saved.
  */
 export function NegativeForm({ slug, rating }: NegativeFormProps) {
   const [reason, setReason] = useState("");
@@ -25,24 +25,35 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
+
+    if (!name.trim()) {
+      setError("Please enter your name so we can reach out.");
+      return;
+    }
+
+    setError(null);
     setSubmitting(true);
 
     const supabase = createClient();
-    // Even on error we thank the patient; never show them a wall.
-    await supabase.rpc("submit_feedback", {
+    const { error: rpcErr } = await supabase.rpc("submit_feedback", {
       p_slug: slug,
       p_rating: rating,
-      p_name: name,
-      p_email: email,
-      p_phone: phone,
-      p_reason: reason,
+      p_name: name.trim(),
+      p_email: email.trim() || null,
+      p_phone: phone.trim() || null,
+      p_reason: reason.trim() || null,
     });
 
     setSubmitting(false);
+    if (rpcErr) {
+      setError("Something went wrong. Please try again.");
+      return;
+    }
     setDone(true);
   }
 
@@ -87,12 +98,15 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="name">Name (optional)</Label>
+          <Label htmlFor="name">Your name</Label>
           <Input
             id="name"
+            required
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
+            placeholder="e.g. Jane Smith"
+            aria-invalid={Boolean(error) && !name.trim()}
             className="h-12 rounded-xl"
           />
         </div>
@@ -121,6 +135,12 @@ export function NegativeForm({ slug, rating }: NegativeFormProps) {
           />
         </div>
       </div>
+
+      {error && (
+        <p className="-mt-2 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
 
       <Button
         type="submit"

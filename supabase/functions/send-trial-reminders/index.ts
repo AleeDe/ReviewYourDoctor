@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     } finally {
       try {
         await client.close();
-      } catch (_) {
+      } catch {
         // denomailer can throw on close after a failed connection - ignore.
       }
     }

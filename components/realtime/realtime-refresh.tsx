@@ -21,9 +21,11 @@ export function RealtimeRefresh({
     const supabase = createClient();
     let timer: ReturnType<typeof setTimeout> | null = null;
     const refresh = () => {
-      // Debounce bursts of events into a single refresh.
+      // Debounce bursts of events into a single, calm refresh. Kept fairly long
+      // so the heavy full re-render happens once, after any instant client-side
+      // updates (e.g. live feedback append), instead of flickering per-event.
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => router.refresh(), 250);
+      timer = setTimeout(() => router.refresh(), 700);
     };
     const ch = supabase.channel(`${channel}-${tables.join("-")}`);
     for (const table of tables) {
