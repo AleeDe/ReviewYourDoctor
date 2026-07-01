@@ -138,6 +138,8 @@ export default async function DashboardPage() {
           {adminButton}
         </AppHeader>
         <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+          {/* Live: flip to the active dashboard the moment we're approved. */}
+          <RealtimeRefresh tables={["clinics"]} channel="dashboard-pending" />
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-green-700 px-6 py-8 text-white shadow-lg shadow-emerald-600/20">
             <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-white/10 blur-2xl" />
             <div className="flex items-center gap-2 text-emerald-50">
@@ -278,7 +280,7 @@ export default async function DashboardPage() {
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         {/* Live updates: refresh when new feedback arrives, no manual reload */}
-        <RealtimeRefresh tables={["submissions"]} channel="dashboard" />
+        <RealtimeRefresh tables={["submissions", "clinics"]} channel="dashboard" />
 
         {/* Quick actions: one tap to share/open the form (KLM + Fitts) */}
         <QuickActions slug={clinic.slug} siteUrl={siteUrl()} />
